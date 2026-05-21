@@ -749,6 +749,8 @@
         syncPacket['critMarkersDisplay'] = document.getElementById('critMarkersDisplay').innerText;
         syncPacket['favorTokens'] = document.getElementById('favorTokens').innerText;
         syncPacket['favorGlyphs'] = document.getElementById('favorGlyphs').innerText;
+		syncPacket['taintCur'] = document.getElementById('taintCur').value;
+		syncPacket['corruptionVal'] = currentCorruptionIndex;
 
         for(let idx = 1; idx <= 24; idx++) {
             const nameEl = document.getElementById(`itemName_${idx}`);
