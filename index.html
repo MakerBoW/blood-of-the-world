@@ -193,6 +193,10 @@
                 <label style="color:var(--accent-gold)">Advancement (AP)</label>
                 <input type="number" id="advancementPoints" value="3" min="0" max="57" onchange="validateAPRange()">
             </div>
+            <div class="header-field">
+    <label>Corruption Index</label>
+    <input type="number" id="corruptionVal" value="0" oninput="persistState()">
+</div>
         </div>
 
         <div class="header-column-right">
@@ -307,21 +311,24 @@
     </div>
 
     <div class="col-center">
-        <div class="card">
-            <div class="card-title">Resonance &amp; Environmental Flux</div>
-            <div class="tracker-layout">
-                <div class="tracker-node">
-                    <div class="tracker-header-labels">
-                        <span>RM (Magical Essence)</span>
-                        <span id="rmTxt">120 / 120</span>
-                    </div>
-                    <div class="meter-container"><div id="rmMeter" class="meter-fill fill-rm" style="width: 100%;"></div></div>
-                    <div class="tracker-control-row">
-                        <input type="number" id="rmCur" value="120" onchange="refreshTrackers()">
-                        <span>/</span>
-                        <input type="number" id="rmMax" value="120" onchange="refreshTrackers()">
-                    </div>
-                </div>
+      <div class="card">
+    <div class="card-title">Flux Nexus (Manual)</div>
+    <div class="tracker-layout">
+        <div class="tracker-node">
+            <div class="tracker-header-labels"><span>RM (Magical Essence)</span><span id="rmTxt">120 / 120</span></div>
+            <div class="meter-container"><div id="rmMeter" class="meter-fill fill-rm" style="width: 100%;"></div></div>
+            <div class="tracker-control-row">
+                <input type="number" id="rmCur" value="120" onchange="refreshTrackers()">
+                <span>/</span><input type="number" id="rmMax" value="120" onchange="refreshTrackers()">
+            </div>
+        </div>
+        <div class="tracker-node" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
+            <div class="tracker-header-labels"><span>Taint</span><span id="taintTxt">0</span></div>
+            <input type="number" id="taintCur" value="0" onchange="refreshTrackers()">
+            <button class="auth-btn" style="background:var(--accent-taint); margin-top:5px;" onclick="convertTaintToCorruption()">Purge Taint to Corruption</button>
+        </div>
+    </div>
+</div>
 
                 <div class="tracker-node" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
                     <div class="tracker-header-labels">
@@ -1019,25 +1026,25 @@
         const rMax = parseInt(document.getElementById('rmMax').value) || 120;
         document.getElementById('rmTxt').innerText = `${rCur} / ${rMax}`;
         document.getElementById('rmMeter').style.width = Math.min(Math.max((rCur / rMax) * 100, 0), 100) + '%';
-
-        // Taint calculation rules conversion processing
-        const tCur = parseInt(document.getElementById('taintCur').value) || 0;
         
-        // Calculate conversion points (100 Taint = 35% Corruption Index)
-        const computedCorruptionFactor = Math.floor(tCur / 100) * 35;
-        const visualSubProgressPercent = tCur % 100;
-        
-        document.getElementById('taintTxt').innerText = `${tCur} Points Accumulated`;
-        document.getElementById('taintMeter').style.width = visualSubProgressPercent + '%';
-
-        document.getElementById('corruptionTxt').innerText = `${computedCorruptionFactor}%`;
-        document.getElementById('corruptionMeter').style.width = Math.min(computedCorruptionFactor, 100) + '%';
-
-        const vCur = parseInt(document.getElementById('veilCur').value) || 0;
-        document.getElementById('veilTxt').innerText = `${vCur} / 100`;
-        document.getElementById('veilMeter').style.width = Math.min(Math.max((vCur / 100) * 100, 0), 100) + '%';
-
+        document.getElementById('taintTxt').innerText = document.getElementById('taintCur').value;
         persistState();
+    }
+
+    function convertTaintToCorruption() {
+        let t = parseInt(document.getElementById('taintCur').value) || 0;
+        let c = parseInt(document.getElementById('corruptionVal').value) || 0;
+        
+        if (t > 0) {
+            // Math: (Taint / 100) * 35
+            let addedCorruption = Math.floor((t / 100) * 35);
+            document.getElementById('corruptionVal').value = c + addedCorruption;
+            document.getElementById('taintCur').value = 0; // Reset Taint
+            
+            alert("Taint Purged. Corruption Index increased by " + addedCorruption);
+            refreshTrackers();
+            persistState();
+        }
     }
 
     function triggerSigilRoll(sigilLabel, attrFieldId, tokenElementId) {
