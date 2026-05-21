@@ -339,6 +339,7 @@
                         </div>
                     </div>
                     <button class="auth-btn" style="background:var(--accent-taint); margin-top:8px; width:100%; cursor:pointer;" onclick="convertTaintToCorruption()">Purge Taint to Corruption</button>
+					<button class="auth-btn" style="margin-top:8px; width:100%; background:#7f1d1d;" onclick="drainCorruption(1)">Drain One from Corruption</button>
                 </div>
 
                 <div class="tracker-node" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
@@ -376,25 +377,25 @@
             
             <div id="proficiencyBlock">
                 <div class="prof-entry-row">
-                    <input type="text" id="profTitle_1" value="Signature Proficiency (Main)" class="clickable-roll-label" style="text-align:left; color:white; border:none;" readonly onclick="executeProficiencyD20Roll('profTitle_1', 'profC_1')">
+					<input type="text" id="profTitle_1" value="Signature Proficiency (Main)" class="clickable-roll-label" style="text-align:left; color:white;" onclick="executeProficiencyD20Roll('profTitle_1', 'profC_1')">
                     <input type="number" id="profC_1" value="19" onchange="persistState()">
                     <input type="number" id="profM_1" value="19" onchange="persistState()">
                     <div class="counter-tool"><button class="counter-btn" onclick="tally('crit_prof_1',-1)">-</button><span class="counter-display" id="crit_prof_1">0</span><button class="counter-btn" onclick="tally('crit_prof_1',1)">+</button></div>
                 </div>
                 <div class="prof-entry-row">
-                    <input type="text" id="profTitle_2" value="Secondary Field" class="clickable-roll-label" style="text-align:left; color:white; border:none;" readonly onclick="executeProficiencyD20Roll('profTitle_2', 'profC_2')">
+                    <input type="text" id="profTitle_2" value="Secondary Field" class="clickable-roll-label" style="text-align:left; color:white; border:none;" onclick="executeProficiencyD20Roll('profTitle_2', 'profC_2')">
                     <input type="number" id="profC_2" value="14" onchange="persistState()">
                     <input type="number" id="profM_2" value="14" onchange="persistState()">
                     <div class="counter-tool"><button class="counter-btn" onclick="tally('crit_prof_2',-1)">-</button><span class="counter-display" id="crit_prof_2">0</span><button class="counter-btn" onclick="tally('crit_prof_2',1)">+</button></div>
                 </div>
                 <div class="prof-entry-row">
-                    <input type="text" id="profTitle_3" value="Tertiary Field" class="clickable-roll-label" style="text-align:left; color:white; border:none;" readonly onclick="executeProficiencyD20Roll('profTitle_3', 'profC_3')">
+                    <input type="text" id="profTitle_3" value="Tertiary Field" class="clickable-roll-label" style="text-align:left; color:white; border:none;" onclick="executeProficiencyD20Roll('profTitle_3', 'profC_3')">
                     <input type="number" id="profC_3" value="14" onchange="persistState()">
                     <input type="number" id="profM_3" value="14" onchange="persistState()">
                     <div class="counter-tool"><button class="counter-btn" onclick="tally('crit_prof_3',-1)">-</button><span class="counter-display" id="crit_prof_3">0</span><button class="counter-btn" onclick="tally('crit_prof_3',1)">+</button></div>
                 </div>
                 <div class="prof-entry-row">
-                    <input type="text" id="profTitle_4" value="Quaternary Field" class="clickable-roll-label" style="text-align:left; color:white; border:none;" readonly onclick="executeProficiencyD20Roll('profTitle_4', 'profC_4')">
+                    <input type="text" id="profTitle_4" value="Quaternary Field" class="clickable-roll-label" style="text-align:left; color:white; border:none;" onclick="executeProficiencyD20Roll('profTitle_4', 'profC_4')">
                     <input type="number" id="profC_4" value="14" onchange="persistState()">
                     <input type="number" id="profM_4" value="14" onchange="persistState()">
                     <div class="counter-tool"><button class="counter-btn" onclick="tally('crit_prof_4',-1)">-</button><span class="counter-display" id="crit_prof_4">0</span><button class="counter-btn" onclick="tally('crit_prof_4',1)">+</button></div>
@@ -412,21 +413,21 @@
                 </div>
                 
                 <div class="prof-entry-row">
-                    <input type="text" id="profTitle_6" value="Auxiliary Field 6" class="clickable-roll-label" style="text-align:left; color:white; border:none;" readonly onclick="executeProficiencyD20Roll('profTitle_6', 'profC_6')">
+                    <input type="text" id="profTitle_6" value="Auxiliary Field 6" class="clickable-roll-label" style="text-align:left; color:white; border:none;" onclick="executeProficiencyD20Roll('profTitle_6', 'profC_6')">
                     <input type="number" id="profC_6" value="14" onchange="persistState()">
                     <input type="number" id="profM_6" value="14" onchange="persistState()">
                     <div class="counter-tool"><button class="counter-btn" onclick="tally('crit_prof_6',-1)">-</button><span class="counter-display" id="crit_prof_6">0</span><button class="counter-btn" onclick="tally('crit_prof_6',1)">+</button></div>
                 </div>
                 
                 <div class="prof-entry-row">
-                    <input type="text" id="profTitle_7" value="Auxiliary Field 7" class="clickable-roll-label" style="text-align:left; color:white; border:none;" readonly onclick="executeProficiencyD20Roll('profTitle_7', 'profC_7')">
+                    <input type="text" id="profTitle_7" value="Auxiliary Field 7" class="clickable-roll-label" style="text-align:left; color:white; border:none;" onclick="executeProficiencyD20Roll('profTitle_7', 'profC_7')">
                     <input type="number" id="profC_7" value="14" onchange="persistState()">
                     <input type="number" id="profM_7" value="14" onchange="persistState()">
                     <div class="counter-tool"><button class="counter-btn" onclick="tally('crit_prof_7',-1)">-</button><span class="counter-display" id="crit_prof_7">0</span><button class="counter-btn" onclick="tally('crit_prof_7',1)">+</button></div>
                 </div>
                 
                 <div class="prof-entry-row">
-                    <input type="text" id="profTitle_8" value="Auxiliary Field 8" class="clickable-roll-label" style="text-align:left; color:white; border:none;" readonly onclick="executeProficiencyD20Roll('profTitle_8', 'profC_8')">
+                    <input type="text" id="profTitle_8" value="Auxiliary Field 8" class="clickable-roll-label" style="text-align:left; color:white; border:none;" onclick="executeProficiencyD20Roll('profTitle_8', 'profC_8')">
                     <input type="number" id="profC_8" value="14" onchange="persistState()">
                     <input type="number" id="profM_8" value="14" onchange="persistState()">
                     <div class="counter-tool"><button class="counter-btn" onclick="tally('crit_prof_8',-1)">-</button><span class="counter-display" id="crit_prof_8">0</span><button class="counter-btn" onclick="tally('crit_prof_8',1)">+</button></div>
@@ -1015,31 +1016,30 @@
     }
 
     // NEW FLUID DYNAMIC MATH LOGIC VECTOR FOR TAINT OVERFLOWS
-    function refreshTrackers() {
-        const rCur = parseInt(document.getElementById('rmCur').value) || 0;
-        const rMax = parseInt(document.getElementById('rmMax').value) || 120;
-        document.getElementById('rmTxt').innerText = `${rCur} / ${rMax}`;
-        document.getElementById('rmMeter').style.width = Math.min(Math.max((rCur / rMax) * 100, 0), 100) + '%';
+	let currentCorruptionIndex = 0;
 
-        // Taint calculation rules conversion processing
-        const tCur = parseInt(document.getElementById('taintCur').value) || 0;
-        
-        // Calculate conversion points (100 Taint = 35% Corruption Index)
-        const computedCorruptionFactor = Math.floor(tCur / 100) * 35;
-        const visualSubProgressPercent = tCur % 100;
-        
-        document.getElementById('taintTxt').innerText = `${tCur} Points Accumulated`;
-        document.getElementById('taintMeter').style.width = visualSubProgressPercent + '%';
+	function refreshTrackers() {
+		const rCur = parseInt(document.getElementById('rmCur').value, 10) || 0;
+		const rMax = parseInt(document.getElementById('rmMax').value, 10) || 120;
+		const safeRMax = rMax <= 0 ? 1 : rMax;
 
-        document.getElementById('corruptionTxt').innerText = `${computedCorruptionFactor}%`;
-        document.getElementById('corruptionMeter').style.width = Math.min(computedCorruptionFactor, 100) + '%';
+		document.getElementById('rmTxt').innerText = `${rCur} / ${rMax}`;
+		document.getElementById('rmMeter').style.width = Math.min(Math.max((rCur / safeRMax) * 100, 0), 100) + '%';
 
-        const vCur = parseInt(document.getElementById('veilCur').value) || 0;
-        document.getElementById('veilTxt').innerText = `${vCur} / 100`;
-        document.getElementById('veilMeter').style.width = Math.min(Math.max((vCur / 100) * 100, 0), 100) + '%';
+		const tCur = parseInt(document.getElementById('taintCur').value, 10) || 0;
+		document.getElementById('taintTxt').innerText = `${tCur} Points Accumulated`;
+		document.getElementById('taintMeter').style.width = Math.min(Math.max(tCur, 0), 100) + '%';
 
-        persistState();
-    }
+		currentCorruptionIndex = Math.min(Math.max(parseInt(currentCorruptionIndex, 10) || 0, 0), 800);
+		document.getElementById('corruptionTxt').innerText = `${currentCorruptionIndex}%`;
+		document.getElementById('corruptionMeter').style.width = `${Math.min(currentCorruptionIndex, 100)}%`;
+
+		const vCur = parseInt(document.getElementById('veilCur').value, 10) || 0;
+		document.getElementById('veilTxt').innerText = `${vCur} / 100`;
+		document.getElementById('veilMeter').style.width = Math.min(Math.max(vCur, 0), 100) + '%';
+
+		persistState();
+	}
 
     function triggerSigilRoll(sigilLabel, attrFieldId, tokenElementId) {
         const tokenDisplayNode = document.getElementById(tokenElementId);
@@ -1116,22 +1116,26 @@
             <div style="font-size:14px; color:${visualHexColor}; margin-top:2px; font-weight:bold;">[Roll ${oracleDieResult}] — ${abstractJudgment}</div>
         `;
     }
-function convertTaintToCorruption() {
-    let t = parseInt(document.getElementById('taintCur').value) || 0;
-    let c = parseInt(document.getElementById('corruptionVal').value) || 0;
-    
-    if (t > 0) {
-        // Math: (Taint / 100) * 35
-        let addedCorruption = Math.floor((t / 100) * 35);
-        document.getElementById('corruptionVal').value = c + addedCorruption;
-        document.getElementById('taintCur').value = 0; // Clears the Taint input
-        
-        alert("Purged " + t + " Taint. Added " + addedCorruption + " Corruption.");
-        persistState(); // Saves the new values to your database
-    } else { 
-        alert("No Taint to purge."); 
-    }
-}
+	function convertTaintToCorruption() {
+		const taintInput = document.getElementById('taintCur');
+		const taintValue = parseInt(taintInput.value, 10) || 0;
+
+		if (taintValue <= 0) {
+			alert("No Taint to purge.");
+			return;
+		}
+
+		const addedCorruption = Math.floor((taintValue / 100) * 35);
+		currentCorruptionIndex = Math.max(0, currentCorruptionIndex + addedCorruption);
+
+		taintInput.value = 0;
+		refreshTrackers();
+	}
+
+	function drainCorruption(amount = 1) {
+		currentCorruptionIndex = Math.max(0, currentCorruptionIndex - amount);
+		refreshTrackers();
+	}
 </script>
 
 </body>
