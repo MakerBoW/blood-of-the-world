@@ -69,6 +69,9 @@
 
         /* Attribute Block UI */
         .attr-wrapper { background: var(--panel-nested); border: 1px solid var(--border-color); border-radius: 4px; margin-bottom: 10px; padding: 10px; }
+        .attr-wrapper.str { border-left: 3px solid #c2410c; }
+        .attr-wrapper.dex { border-left: 3px solid #0284c7; }
+        .attr-wrapper.wil { border-left: 3px solid var(--accent-taint); }
         .attr-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 6px; margin-bottom: 8px; }
         .attr-identity { display: flex; flex-direction: column; }
         .attr-title { font-weight: bold; font-size: 14px; }
@@ -184,6 +187,7 @@
     </header>
 
     <div class="col-left">
+        
         <div class="global-success-zone">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <span style="font-size:10px; text-transform:uppercase; font-weight:bold; color:var(--text-muted);">Session Success Registry</span>
@@ -204,7 +208,7 @@
         <div class="card">
             <div class="card-title">Core Attributes &amp; Skill Matrices <span>3d6kh2 Engine</span></div>
             
-            <div class="attr-wrapper">
+            <div class="attr-wrapper str">
                 <div class="attr-header">
                     <div class="attr-identity">
                         <span class="attr-title">Strength (STR)</span>
@@ -226,7 +230,7 @@
                 <div style="text-align:right; font-size:10px; color:var(--text-muted); font-style:italic;" id="pool_str">Points Available: 7</div>
             </div>
 
-            <div class="attr-wrapper">
+            <div class="attr-wrapper dex">
                 <div class="attr-header">
                     <div class="attr-identity">
                         <span class="attr-title">Dexterity (DEX)</span>
@@ -248,7 +252,7 @@
                 <div style="text-align:right; font-size:10px; color:var(--text-muted); font-style:italic;" id="pool_dex">Points Available: 7</div>
             </div>
 
-            <div class="attr-wrapper">
+            <div class="attr-wrapper wil">
                 <div class="attr-header">
                     <div class="attr-identity">
                         <span class="attr-title">Will (WIL)</span>
@@ -492,10 +496,11 @@
     const SUPABASE_URL = "https://tovewipgxnpxvqhydveq.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvdmV3aXBneG5weHZxaHlkdmVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNDU0MzYsImV4cCI6MjA5NDkyMTQzNn0.kx0qPB8q68csr-zrv1gmoJJxzQFBnDoiDj0tzLJMJYc";
     
-if (!window.supabaseClientEngine) {
-    window.supabaseClientEngine = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-}
-const supabase = window.supabaseClientEngine;
+    // SAFE SCOPE VARIABLE CHECK TO AVOID RE-DECLARATION CONSOLE HALTS
+    if (!window.supabaseClientInstance) {
+        window.supabaseClientInstance = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+    const supabase = window.supabaseClientInstance;
 
     let currentUserSession = null;
     let loadedCloudVesselId = null; 
@@ -802,8 +807,8 @@ const supabase = window.supabaseClientEngine;
 
     function cacheInventoryValues() {
         for(let idx = 1; idx <= 24; idx++) {
-            const nameEl = document.getElementById(`itemName_${idx}`);
-            const weightEl = document.getElementById(`itemWeight_${idx}`);
+            const nameEl = document.getElementById('itemName_' + idx);
+            const weightEl = document.getElementById('itemWeight_' + idx);
             if(nameEl && weightEl) {
                 cachedInventoryData[idx] = { name: nameEl.value, weight: weightEl.value };
             }
@@ -844,7 +849,7 @@ const supabase = window.supabaseClientEngine;
     function recalculatePayloadWeightNoReconstruct(maxSlots) {
         let trackingWeightSum = 0;
         for(let loopIdx = 1; loopIdx <= maxSlots; loopIdx++) {
-            const rowWeightEl = document.getElementById(`itemWeight_${loopIdx}`);
+            const rowWeightEl = document.getElementById('itemWeight_' + loopIdx);
             if(rowWeightEl) trackingWeightSum += parseInt(rowWeightEl.value) || 0;
         }
 
