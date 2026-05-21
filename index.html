@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood of the World - Cloud Network Protocol v4.0</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-dark: #0f0f11;
+            --panel-bg: #16161a;
+            --panel-nested: #1e1e24;
+            --border-color: #2a2a32;
+            --text-main: #e4e4e7;
+            --text-muted: #8e8e9f;
+            --accent-blood: #991b1b;
+            --accent-taint: #6b21a8;
+            --accent-gold: #d97706;
+            --accent-green: #166534;
+            --accent-blue: #0369a1;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background-color: var(--bg-dark); color: var(--text-main); padding: 15px; font-size: 13px; line-height: 1.4; }
+        
+        /* Cloud Identity Layer Style */
+        .auth-bar { background: #111115; border: 1px solid var(--border-color); padding: 12px; margin-bottom: 15px; border-radius: 6px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; border-top: 3px solid var(--accent-gold); }
+        .auth-inputs { display: flex; gap: 8px; align-items: center; }
+        .auth-inputs input { background: #000; border: 1px solid var(--border-color); color: white; padding: 5px 10px; border-radius: 4px; font-size: 12px; }
+        .auth-btn { background: #2e2e38; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; }
+        .auth-btn:hover { background: #444452; }
+        .auth-btn.primary { background: var(--accent-gold); color: black; }
+        .auth-btn.primary:hover { background: #f59e0b; }
+        .status-pill { font-size: 11px; font-weight: bold; color: var(--text-muted); padding: 3px 8px; background: rgba(255,255,255,0.05); border-radius: 20px; }
+        .vessel-selector { background: #000; border: 1px solid var(--border-color); color: var(--accent-gold); padding: 5px; border-radius: 4px; font-weight: bold; font-size: 12px; min-width: 180px; }
+
+        .container { max-width: 1350px; margin: 0 auto; display: grid; grid-template-columns: repeat(12, 1fr); gap: 15px; opacity: 0.4; pointer-events: none; transition: opacity 0.3s ease; }
+        .container.unlocked { opacity: 1; pointer-events: auto; }
+        
+        /* Header Region */
+        header { grid-column: span 12; background: var(--panel-bg); border: 1px solid var(--border-color); padding: 15px; border-radius: 6px; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; border-left: 5px solid var(--accent-blood); }
+        .header-field { display: flex; flex-direction: column; justify-content: center; }
+        .header-field label { font-size: 10px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 4px; font-weight: bold; }
+        .header-field input, .header-field select { background: rgba(0,0,0,0.4); border: 1px solid var(--border-color); color: white; padding: 6px 10px; border-radius: 4px; font-size: 13px; }
+        
+        /* Columns Layout */
+        .col-left { grid-column: span 5; display: flex; flex-direction: column; gap: 15px; }
+        .col-center { grid-column: span 4; display: flex; flex-direction: column; gap: 15px; }
+        .col-right { grid-column: span 3; display: flex; flex-direction: column; gap: 15px; }
+
+        @media (max-width: 1024px) {
+            .col-left, .col-center, .col-right { grid-column: span 12; }
+        }
+
+        /* Card Framework */
+        .card { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 6px; padding: 15px; position: relative; }
+        .card-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); border-bottom: 1px solid var(--border-color); padding-bottom: 6px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+        
+        /* Inline Counter Component */
+        .counter-tool { display: inline-flex; align-items: center; gap: 4px; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-color); }
+        .counter-tool label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; }
+        .counter-btn { background: #2a2a35; border: none; color: white; width: 16px; height: 16px; border-radius: 2px; cursor: pointer; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+        .counter-btn:hover { background: #3e3e4f; }
+        .counter-display { font-size: 11px; font-weight: bold; min-width: 14px; text-align: center; color: var(--text-main); }
+
+        /* Global Success Progress Bar Component */
+        .global-success-zone { display: flex; flex-direction: column; gap: 4px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 4px; margin-bottom: 10px; border: 1px solid var(--border-color); }
+        .marker-box { display: flex; gap: 6px; align-items: center; font-size: 11px; font-weight: bold; color: var(--accent-gold); }
+
+        /* Attribute Block UI */
+        .attr-wrapper { background: var(--panel-nested); border: 1px solid var(--border-color); border-radius: 4px; margin-bottom: 10px; padding: 10px; }
+        .attr-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 6px; margin-bottom: 8px; }
+        .attr-identity { display: flex; flex-direction: column; }
+        .attr-title { font-weight: bold; font-size: 14px; }
+        .attr-input-box { display: flex; align-items: center; gap: 8px; }
+        .attr-input-box input { width: 45px; text-align: center; background: #000; border: 1px solid var(--border-color); color: #fff; padding: 4px; border-radius: 4px; font-size: 14px; font-weight: bold; }
+        
+        /* Skill Line Formatting */
+        .skill-grid-header { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; font-size: 10px; color: var(--text-muted); font-weight: bold; text-transform: uppercase; margin-bottom: 4px; padding-left: 4px; }
+        .skill-item-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; align-items: center; padding: 4px; border-radius: 3px; background: rgba(0,0,0,0.15); margin-bottom: 3px; }
+        .skill-item-row input[type="number"] { background: #000; border: 1px solid var(--border-color); color: white; text-align: center; padding: 2px; border-radius: 3px; font-size: 12px; width: 100%; }
+        .skill-total-val { font-weight: bold; color: var(--accent-gold); text-align: center; }
+        
+        /* Checkbox Custom Style */
+        .session-chk-label { display: flex; justify-content: center; align-items: center; }
+        .session-chk { width: 14px; height: 14px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.3); border-radius: 2px; cursor: pointer; display: inline-block; position: relative; }
+        .session-chk.active { background: var(--accent-green); border-color: var(--accent-green); }
+        .session-chk.active::after { content: '✓'; position: absolute; top: -3px; left: 2px; font-size: 10px; color: white; }
+
+        /* Trackers UI Elements */
+        .tracker-layout { display: flex; flex-direction: column; gap: 12px; }
+        .tracker-node { display: flex; flex-direction: column; gap: 4px; }
+        .tracker-header-labels { display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; }
+        .meter-container { width: 100%; height: 10px; background: rgba(0,0,0,0.5); border: 1px solid var(--border-color); border-radius: 3px; overflow: hidden; }
+        .meter-fill { height: 100%; width: 0%; transition: width 0.2s ease; }
+        .fill-rm { background: linear-gradient(90deg, #0284c7, #38bdf8); }
+        .fill-taint { background: linear-gradient(90deg, #7e22ce, #c084fc); }
+        .fill-veil { background: linear-gradient(90deg, #be123c, #fb7185); }
+        .tracker-control-row { display: flex; gap: 8px; align-items: center; }
+        .tracker-control-row input { background: #000; border: 1px solid var(--border-color); color: white; padding: 4px; text-align: center; border-radius: 4px; width: 55px; font-size: 12px; }
+
+        /* Proficiencies Configuration */
+        .prof-entry-row { display: grid; grid-template-columns: 2.2fr 1fr 1fr 1.2fr; gap: 6px; margin-bottom: 6px; align-items: center; background: rgba(0,0,0,0.15); padding: 4px; border-radius: 4px; }
+        .prof-entry-row input, .prof-entry-row select { background: #000; border: 1px solid var(--border-color); color: white; padding: 4px; border-radius: 3px; font-size: 12px; width: 100%; }
+
+        /* Armament Grid Styling */
+        .weap-entry-row { display: grid; grid-template-columns: 0.5fr 3fr 1fr; gap: 6px; margin-bottom: 6px; align-items: center; }
+        .weap-entry-row input { background: #000; border: 1px solid var(--border-color); color: white; padding: 4px; border-radius: 3px; font-size: 12px; width: 100%; }
+
+        /* Interactive Collapsible Accordion Box with Inner Scrolling */
+        .accordion-block { border: 1px solid var(--border-color); border-radius: 4px; overflow: hidden; margin-top: 5px; }
+        .accordion-trigger { background: var(--panel-nested); padding: 10px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .accordion-trigger:hover { background: #25252e; }
+        .accordion-content { background: rgba(0,0,0,0.2); display: none; border-top: 1px solid var(--border-color); }
+        .accordion-content.open { display: block; }
+        .accordion-scroll-container { max-height: 250px; overflow-y: auto; padding: 10px; }
+        
+        /* Sigils Matrix Style Layout */
+        .sigil-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .sigil-box { background: var(--panel-nested); border: 1px solid var(--border-color); border-radius: 4px; padding: 8px; text-align: center; display: flex; flex-direction: column; gap: 6px; align-items: center; cursor: pointer; transition: background 0.15s ease; }
+        .sigil-box:hover { background: #24242d; border-color: var(--text-muted); }
+        .sigil-title { font-weight: bold; font-size: 11px; text-transform: uppercase; }
+
+        /* Utility Core styles */
+        textarea { width: 100%; height: 85px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); color: white; padding: 8px; border-radius: 4px; resize: vertical; font-size: 12px; }
+        .random-btn { background: var(--accent-taint); color: white; border: none; border-radius: 4px; padding: 3px 8px; font-size: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
+        .random-btn:hover { background: #86198f; }
+        .dice-tray { display: flex; gap: 4px; margin-top: 5px; }
+        .dice-tray select, .dice-tray input { background: #000; border: 1px solid var(--border-color); color: white; padding: 4px; border-radius: 4px; font-size: 12px; }
+        .action-btn { background: var(--accent-blood); color: white; border: none; padding: 4px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px; text-transform: uppercase; }
+        .action-btn:hover { background: #b91c1c; }
+        .oracle-btn { background: var(--accent-gold); color: #000; border: none; padding: 4px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px; text-transform: uppercase; margin-top: 4px; width: 100%; }
+        .oracle-btn:hover { background: #f59e0b; }
+        #rollOutput { background: rgba(0,0,0,0.4); border: 1px solid var(--border-color); padding: 6px; border-radius: 4px; text-align: center; font-weight: bold; color: var(--accent-gold); min-height: 40px; margin-top: 6px; font-size: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.3; }
+        .bug-fix-tag { color: var(--text-muted); font-size: 10px; text-align: center; padding-top: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="auth-bar">
+    <div id="loggedOutZone" class="auth-inputs">
+        <input type="email" id="authEmail" placeholder="Vessel Account Email">
+        <input type="password" id="authPassword" placeholder="Secure Password">
+        <button class="auth-btn primary" onclick="handleLogin()">Sign In</button>
+        <button class="auth-btn" onclick="handleRegister()">Register Account</button>
+    </div>
+    <div id="loggedInZone" class="auth-inputs" style="display:none;">
+        <span class="status-pill" id="userDisplayTag">Vessel Static Online</span>
+        <select id="activeVesselDrop" class="vessel-selector" onchange="switchActiveVessel()">
+            <option value="">-- Summon Assigned Vessel --</option>
+        </select>
+        <button class="auth-btn primary" onclick="createNewVesselInCloud()">+ Brand New Vessel</button>
+        <button class="auth-btn" style="background:#bf2121" onclick="handleLogout()">Disconnect</button>
+    </div>
+</div>
+
+<div class="container" id="sheetContainer">
+    
+    <header>
+        <div class="header-field" style="grid-column: span 2;">
+            <label>Character Name</label>
+            <input type="text" id="characterName" oninput="persistState()">
+        </div>
+        <div class="header-field" style="grid-column: span 2;">
+            <label>Background</label>
+            <input type="text" id="characterBackground" oninput="persistState()">
+        </div>
+        <div class="header-field" style="grid-column: span 2;">
+            <label>Marked Archon <button class="random-btn" onclick="rollRandomArchon()">Roll</button></label>
+            <input type="text" id="archonDomain" placeholder="Click roll or write..." oninput="persistState()">
+        </div>
+        <div class="header-field">
+            <label>Corruption Index</label>
+            <input type="text" id="corruptionIndex" placeholder="0%" oninput="persistState()">
+        </div>
+        <div class="header-field">
+            <label>RMC Bank Balance</label>
+            <input type="number" id="rmcBalance" value="0" oninput="persistState()">
+        </div>
+        <div class="header-field">
+            <label style="color:var(--accent-gold)">Advancement (AP)</label>
+            <input type="number" id="advancementPoints" value="3" min="0" max="57" onchange="validateAPRange()">
+        </div>
+    </header>
+
+    <div class="col-left">
+        <div class="global-success-zone">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:10px; text-transform:uppercase; font-weight:bold; color:var(--text-muted);">Session Success Registry</span>
+                <div class="counter-tool">
+                    <label>Success Log</label>
+                    <button class="counter-btn" onclick="adjustGlobalSuccess(-1)">-</button>
+                    <span class="counter-display" id="globalSuccessCount">0</span>
+                    <button class="counter-btn" onclick="adjustGlobalSuccess(1)">+</button>
+                </div>
+            </div>
+            <div class="marker-box">
+                <span>Crit Markers Unlocked:</span>
+                <span id="critMarkersDisplay" style="font-size:14px;">0</span>
+                <span style="font-size:9px; color:var(--text-muted); font-weight:normal; margin-left:auto;">(1 Marker per 8 Successes)</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Core Attributes &amp; Skill Matrices <span>3d6kh2 Engine</span></div>
+            
+            <div class="attr-wrapper">
+                <div class="attr-header">
+                    <div class="attr-identity">
+                        <span class="attr-title">Strength (STR)</span>
+                    </div>
+                    <div class="attr-input-box">
+                        <div class="counter-tool"><label>D20 Crit</label><button class="counter-btn" onclick="tally('crit_attr_str',-1)">-</button><span class="counter-display" id="crit_attr_str">0</span><button class="counter-btn" onclick="tally('crit_attr_str',1)">+</button></div>
+                        <input type="number" id="val_str" value="7" min="2" max="12" onchange="runCalculations()">
+                    </div>
+                </div>
+                <div class="skill-grid-header">
+                    <span>Skill Node</span><span>Base</span><span>Alloc</span><span>Total</span><span>Crit</span><span>End Session</span>
+                </div>
+                <div class="skill-item-row">
+                    <span>Endurance</span><span id="base_endurance">33%</span><input type="number" id="alloc_endurance" value="0" onchange="runCalculations()"><span id="total_endurance" class="skill-total-val">33%</span><div class="counter-tool"><button class="counter-btn" onclick="tally('crit_sk_end',-1)">-</button><span class="counter-display" id="crit_sk_end">0</span><button class="counter-btn" onclick="tally('crit_sk_end',1)">+</button></div><div class="session-chk-label"><div class="session-chk" id="chk_endurance" onclick="flipSessionCheck('chk_endurance')"></div></div>
+                </div>
+                <div class="skill-item-row">
+                    <span>Grip</span><span id="base_grip">33%</span><input type="number" id="alloc_grip" value="0" onchange="runCalculations()"><span id="total_grip" class="skill-total-val">33%</span><div class="counter-tool"><button class="counter-btn" onclick="tally('crit_sk_grp',-1)">-</button><span class="counter-display" id="crit_sk_grp">0</span><button class="counter-btn" onclick="tally('crit_sk_grp',1)">+</button></div><div class="session-chk-label"><div class="session-chk" id="chk_grip" onclick="flipSessionCheck('chk_grip')"></div></div>
+                </div>
+                <div style="text-align:right; font-size:10px; color:var(--text-muted); font-style:italic;" id="pool_str">Points Available: 7</div>
+            </div>
+
+            <div class="attr-wrapper">
+                <div class="attr-header">
+                    <div class="attr-identity">
+                        <span class="attr-title">Dexterity (DEX)</span>
+                    </div>
+                    <div class="attr-input-box">
+                        <div class="counter-tool"><label>D20 Crit</label><button class="counter-btn" onclick="tally('crit_attr_dex',-1)">-</button><span class="counter-display" id="crit_attr_dex">0</span><button class="counter-btn" onclick="tally('crit_attr_dex',1)">+</button></div>
+                        <input type="number" id="val_dex" value="7" min="2" max="12" onchange="runCalculations()">
+                    </div>
+                </div>
+                <div class="skill-grid-header">
+                    <span>Skill Node</span><span>Base</span><span>Alloc</span><span>Total</span><span>Crit</span><span>End Session</span>
+                </div>
+                <div class="skill-item-row">
+                    <span>Reaction</span><span id="base_reaction">33%</span><input type="number" id="alloc_reaction" value="0" onchange="runCalculations()"><span id="total_reaction" class="skill-total-val">33%</span><div class="counter-tool"><button class="counter-btn" onclick="tally('crit_sk_rea',-1)">-</button><span class="counter-display" id="crit_sk_rea">0</span><button class="counter-btn" onclick="tally('crit_sk_rea',1)">+</button></div><div class="session-chk-label"><div class="session-chk" id="chk_reaction" onclick="flipSessionCheck('chk_reaction')"></div></div>
+                </div>
+                <div class="skill-item-row">
+                    <span>Grace</span><span id="base_grace">33%</span><input type="number" id="alloc_grace" value="0" onchange="runCalculations()"><span id="total_grace" class="skill-total-val">33%</span><div class="counter-tool"><button class="counter-btn" onclick="tally('crit_sk_gra',-1)">-</button><span class="counter-display" id="crit_sk_gra">0</span><button class="counter-btn" onclick="tally('crit_sk_gra',1)">+</button></div><div class="session-chk-label"><div class="session-chk" id="chk_grace" onclick="flipSessionCheck('chk_grace')"></div></div>
+                </div>
+                <div style="text-align:right; font-size:10px; color:var(--text-muted); font-style:italic;" id="pool_dex">Points Available: 7</div>
+            </div>
+
+            <div class="attr-wrapper">
+                <div class="attr-header">
+                    <div class="attr-identity">
+                        <span class="attr-title">Will (WIL)</span>
+                    </div>
+                    <div class="attr-input-box">
+                        <div class="counter-tool"><label>D20 Crit</label><button class="counter-btn" onclick="tally('crit_attr_wil',-1)">-</button><span class="counter-display" id="crit_attr_wil">0</span><button class="counter-btn" onclick="tally('crit_attr_wil',1)">+</button></div>
+                        <input type="number" id="val_wil" value="7" min="2" max="12" onchange="runCalculations()">
+                    </div>
+                </div>
+                <div class="skill-grid-header">
+                    <span>Skill Node</span><span>Base</span><span>Alloc</span><span>Total</span><span>Crit</span><span>End Session</span>
+                </div>
+                <div class="skill-item-row">
+                    <span>Focus</span><span id="base_focus">33%</span><input type="number" id="alloc_focus" value="0" onchange="runCalculations()"><span id="total_focus" class="skill-total-val">33%</span><div class="counter-tool"><button class="counter-btn" onclick="tally('crit_sk_foc',-1)">-</button><span class="counter-display" id="crit_sk_foc">0</span><button class="counter-btn" onclick="tally('crit_sk_foc',1)">+</button></div><div class="session-chk-label"><div class="session-chk" id="chk_focus" onclick="flipSessionCheck('chk_focus')"></div></div>
+                </div>
+                <div class="skill-item-row">
+                    <span>Resolve</span><span id="base_resolve">33%</span><input type="number" id="alloc_resolve" value="0" onchange="runCalculations()"><span id="total_resolve" class="skill-total-val">33%</span><div class="counter-tool"><button class="counter-btn" onclick="tally('crit_sk_res',-1)">-</button><span class="counter-display" id="crit_sk_res">0</span><button class="counter-btn" onclick="tally('crit_sk_res',1)">+</button></div><div class="session-chk-label"><div class="session-chk" id="chk_resolve" onclick="flipSessionCheck('chk_resolve')"></div></div>
+                </div>
+                <div style="text-align:right; font-size:10px; color:var(--text-muted); font-style:italic;" id="pool_wil">Points Available: 7</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-center">
+        <div class="card">
+            <div class="card-title">Resonance &amp; Environmental Flux</div>
+            <div class="tracker-layout">
+                <div class="tracker-node">
+                    <div class="tracker-header-labels">
+                        <span>RM (Magical Essence)</span>
+                        <span id="rmTxt">120 / 120</span>
+                    </div>
+                    <div class="meter-container"><div id="rmMeter" class="meter-fill fill-rm" style="width: 100%;"></div></div>
+                    <div class="tracker-control-row">
+                        <input type="number" id="rmCur" value="120" onchange="refreshTrackers()">
+                        <span>/</span>
+                        <input type="number" id="rmMax" value="120" onchange="refreshTrackers()">
+                    </div>
+                </div>
+
+                <div class="tracker-node" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
+                    <div class="tracker-header-labels">
+                        <span>Taint Allocation</span>
+                        <span id="taintTxt">0 / 100</span>
+                    </div>
+                    <div class="meter-container"><div id="taintMeter" class="meter-fill fill-taint" style="width: 0%;"></div></div>
+                    <div class="tracker-control-row">
+                        <input type="number" id="taintCur" value="0" min="0" max="100" onchange="refreshTrackers()">
+                        <span>/ 100</span>
+                        <div class="counter-tool" style="margin-left:auto;">
+                            <label>Cleanse Days</label>
+                            <button class="counter-btn" onclick="tally('cleanseDays',-1)">-</button>
+                            <span class="counter-display" id="cleanseDays">0</span>
+                            <button class="counter-btn" onclick="tally('cleanseDays',1)">+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tracker-node" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
+                    <div class="tracker-header-labels">
+                        <span style="color:#fb7185;">The Global Veil Vector</span>
+                        <span id="veilTxt">0 / 100</span>
+                    </div>
+                    <div class="meter-container"><div id="veilMeter" class="meter-fill fill-veil" style="width: 0%;"></div></div>
+                    <div class="tracker-control-row">
+                        <input type="number" id="veilCur" value="0" step="5" onchange="refreshTrackers()">
+                        <span style="font-size:10px; color:var(--text-muted);">Steps: ±5 or ±10 intervals</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Proficiency Framework &amp; Damage Pools (8 Slots)</div>
+            <p style="font-size:10px; color:var(--text-muted); margin-bottom:8px; font-style:italic;">
+                Main: 2d6+12 | All others: 2d6+7. Tracks points and Critical hits independently.
+            </p>
+            
+            <div class="prof-entry-row" style="font-weight:bold; font-size:10px; color:var(--text-muted); background:none; padding:0; margin-bottom:4px;">
+                <span>Descriptor Designation</span><span>Cur</span><span>Max</span><span style="text-align:center;">D20 Crit</span>
+            </div>
+            
+            <div id="proficiencyBlock">
+                <div class="prof-entry-row">
+                    <input type="text" id="profTitle_1" value="Signature Proficiency (Main)">
+                    <input type="number" id="profC_1" value="19" onchange="persistState()">
+                    <input type="number" id="profM_1" value="19" onchange="persistState()">
+                    <div class="counter-tool"><button class="counter-btn" onclick="tally('crit_prof_1',-1)">-</button><span class="counter-display" id="crit_prof_1">0</span><button class="counter-btn" onclick="tally('crit_prof_1',1)">+</button></div>
+                </div>
+                <div class="prof-entry-row">
+                    <input type="text" id="profTitle_2" value="Secondary Field">
+                    <input type="number" id="profC_2" value="14" onchange="persistState()">
+                    <input type="number" id="profM_2" value="14" onchange="persistState()">
+                    <div class="counter-tool"><button class="counter-btn" onclick="tally('crit_prof_2',-1)">-</button><span class="counter-display" id="crit_prof_2">0</span><button class="counter-btn" onclick="tally('crit_prof_2',1)">+</button></div>
+                </div>
+                <div class="prof-entry-row">
+                    <input type="text" id="profTitle_3" value="Tertiary Field">
+                    <input type="number" id="profC_3" value="14" onchange="persistState()">
+                    <input type="number" id="profM_3" value="14" onchange="persistState()">
+                    <div class="counter-tool"><button class="counter-btn" onclick="tally('crit_prof_3',-1)">-</button><span class="counter-display" id="crit_prof_3">0</span><button class="counter-btn" onclick="tally('crit_prof_3',1)">+</button></div>
+                </div>
+                <div class="prof-entry-row">
+                    <input type="text" id="profTitle_4" value="Quaternary Field">
+                    <input type="number" id="profC_4" value="14" onchange="persistState()">
+                    <input type="number" id="profM_4" value="14" onchange="persistState()">
+                    <div class="counter-tool"><button class="counter-btn" onclick="tally('crit_prof_4',-1)">-</button><span class="counter-display" id="crit_prof_4">0</span><button class="counter-btn" onclick="tally('crit_prof_4',1)">+</button></div>
+                </div>
+                
+                <div class="prof-entry-row" style="border-left: 2px solid var(--accent-blood);">
+                    <select id="profTitle_5" onchange="persistState()">
+                        <option value="Precision Strike">Precision Strike (Combat)</option>
+                        <option value="Heavy Blow">Heavy Blow (Combat)</option>
+                        <option value="Disturb Hit">Disturb Hit (Combat)</option>
+                    </select>
+                    <input type="number" id="profC_5" value="14" readonly style="color:var(--accent-gold); font-weight:bold; background:rgba(0,0,0,0.6);" title="Calculated as Base Max + Equipped Weapon Modifiers">
+                    <input type="number" id="profM_5" value="14" onchange="updateCombatProficiencyValue()">
+                    <div class="counter-tool"><button class="counter-btn" onclick="tally('crit_prof_5',-1)">-</button><span class="counter-display" id="crit_prof_5">0</span><button class="counter-btn" onclick="tally('crit_prof_5',1)">+</button></div>
+                </div>
+                
+                <div class="prof-entry-row">
+                    <input type="text" id="profTitle_6" placeholder="Auxiliary Field 6">
+                    <input type="number" id="profC_6" value="14" onchange="persistState()">
+                    <input type="number" id="profM_6" value="14" onchange="persistState()">
+                    <div class="counter-tool"><button class="counter-btn" onclick="tally('crit_prof_6',-1)">-</button><span class="counter-display" id="crit_prof_6">0</span><button class="counter-btn" onclick="tally('crit_prof_6',1)">+</button></div>
+                </div>
+                
+                <div class="prof-entry-row">
+                    <input type="text" id="profTitle_7" placeholder="Auxiliary Field 7">
+                    <input type="number" id="profC_7" value="14" onchange="persistState()">
+                    <input type="number" id="profM_7" value="14" onchange="persistState()">
+                    <div class="counter-tool"><button class="counter-btn" onclick="tally('crit_prof_7',-1)">-</button><span class="counter-display" id="crit_prof_7">0</span><button class="counter-btn" onclick="tally('crit_prof_7',1)">+</button></div>
+                </div>
+                
+                <div class="prof-entry-row">
+                    <input type="text" id="profTitle_8" placeholder="Auxiliary Field 8">
+                    <input type="number" id="profC_8" value="14" onchange="persistState()">
+                    <input type="number" id="profM_8" value="14" onchange="persistState()">
+                    <div class="counter-tool"><button class="counter-btn" onclick="tally('crit_prof_8',-1)">-</button><span class="counter-display" id="crit_prof_8">0</span><button class="counter-btn" onclick="tally('crit_prof_8',1)">+</button></div>
+                </div>
+            </div>
+            <div class="bug-fix-tag">Vessel Logic v4.0 • System Layout Cleansed</div>
+        </div>
+    </div>
+
+    <div class="col-right">
+        <div class="card">
+            <div class="card-title">Defensive Sigil Allocations <span style="font-size:9px; text-transform:none; color:var(--accent-gold);">Click box to Roll &amp; Spend</span></div>
+            <p style="font-size:10px; color:var(--text-muted); margin-bottom:8px; font-style:italic;">
+                Parry (+STR) | Evasion (+DEX) | Barrier (+WIL).
+            </p>
+            <div class="sigil-grid">
+                <div class="sigil-box" style="border-top:2px solid var(--accent-blue);" onclick="triggerSigilRoll('Parry', 'val_str', 'sigilParry')">
+                    <span class="sigil-title">Parry</span>
+                    <div class="counter-tool" onclick="event.stopPropagation();">
+                        <button class="counter-btn" onclick="tally('sigilParry',-1)">-</button>
+                        <span class="counter-display" id="sigilParry">2</span>
+                        <button class="counter-btn" onclick="tally('sigilParry',1)">+</button>
+                    </div>
+                </div>
+                <div class="sigil-box" style="border-top:2px solid var(--accent-gold);" onclick="triggerSigilRoll('Evasion', 'val_dex', 'sigilEvasion')">
+                    <span class="sigil-title">Evasion</span>
+                    <div class="counter-tool" onclick="event.stopPropagation();">
+                        <button class="counter-btn" onclick="tally('sigilEvasion',-1)">-</button>
+                        <span class="counter-display" id="sigilEvasion">2</span>
+                        <button class="counter-btn" onclick="tally('sigilEvasion',1)">+</button>
+                    </div>
+                </div>
+                <div class="sigil-box" style="border-top:2px solid var(--accent-taint);" onclick="triggerSigilRoll('Barrier', 'val_wil', 'sigilBarrier')">
+                    <span class="sigil-title">Barrier</span>
+                    <div class="counter-tool" onclick="event.stopPropagation();">
+                        <button class="counter-btn" onclick="tally('sigilBarrier',-1)">-</button>
+                        <span class="counter-display" id="sigilBarrier">0</span>
+                        <button class="counter-btn" onclick="tally('sigilBarrier',1)">+</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">
+                Abilities &amp; Magia Registers
+                <div class="counter-tool" style="font-size:9px;"><label>Successes</label><button class="counter-btn" onclick="tally('abilitySuccessTracker',-1)">-</button><span class="counter-display" id="abilitySuccessTracker">0</span><button class="counter-btn" onclick="tally('abilitySuccessTracker',1)">+</button></div>
+            </div>
+            <textarea id="abilitiesLogBox" placeholder="Register abilities protocols, cost indices, and success marks..." oninput="persistState()"></textarea>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Wielded Armaments</div>
+            <div class="weap-entry-row" style="font-weight:bold; font-size:10px; color:var(--text-muted); margin-bottom:2px;">
+                <span>Eq.</span><span>Equipped Weapon Name</span><span>Prof. Mod</span>
+            </div>
+            <div class="weap-entry-row">
+                <div class="session-chk-label"><div class="session-chk" id="weapEquip_1" onclick="flipEquipCheck('weapEquip_1')"></div></div>
+                <input type="text" id="weapName_1" placeholder="Primary Armament" oninput="persistState()">
+                <input type="number" id="weapMod_1" value="0" onchange="updateCombatProficiencyValue()" style="text-align:center;">
+            </div>
+            <div class="weap-entry-row">
+                <div class="session-chk-label"><div class="session-chk" id="weapEquip_2" onclick="flipEquipCheck('weapEquip_2')"></div></div>
+                <input type="text" id="weapName_2" placeholder="Secondary / Alternative" oninput="persistState()">
+                <input type="number" id="weapMod_2" value="0" onchange="updateCombatProficiencyValue()" style="text-align:center;">
+            </div>
+
+            <div class="card-title" style="margin-top:14px; border-bottom:1px solid var(--border-color); padding-bottom:4px;">
+                Equipment Systems <span id="weightSlotDisplay" style="color:var(--accent-gold)">Slots: 0 / 14</span>
+            </div>
+            
+            <div class="accordion-block">
+                <div class="accordion-trigger" onclick="toggleAccordion('inventoryContentPanel')">
+                    📦 Access Inventory Array <span id="accordionArrow">▶</span>
+                </div>
+                <div id="inventoryContentPanel" class="accordion-content">
+                    <div class="accordion-scroll-container" id="inventoryMountElement">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">System Terminal Tray</div>
+            <div class="dice-tray">
+                <input type="number" id="diceQty" value="1" min="1" max="10" style="width:34px;">
+                <select id="diceSides" style="flex:1;">
+                    <option value="100">d100 (Checks)</option>
+                    <option value="20">d20 (Standard)</option>
+                    <option value="12">d12 Die</option>
+                    <option value="10">d10 Die</option>
+                    <option value="8">d8 Die</option>
+                    <option value="6">d6 Die</option>
+                    <option value="4">d4 Die</option>
+                </select>
+                <button class="action-btn" onclick="rollDiceTray()">Roll</button>
+            </div>
+            <button class="oracle-btn" onclick="rollOracleParadigm()">Consult Fate Oracle</button>
+            <div id="rollOutput">Awaiting command line execution...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // CLOUD INITIALIZATION INTERFACE WITH YOUR KEYS
+    const SUPABASE_URL = "https://tovewipgxnpxvqhydveq.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvdmV3aXBneG5weHZxaHlkdmVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNDU0MzYsImV4cCI6MjA5NDkyMTQzNn0.kx0qPB8q68csr-zrv1gmoJJxzQFBnDoiDj0tzLJMJYc";
+    
+    const supabase = gen_random_uuid = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentUserSession = null;
+    let loadedCloudVesselId = null; 
+    let cachedInventoryData = {};
+    let isCloudLoadingInProgress = false;
+
+    const conversionTable = {
+        2: 21, 3: 23, 4: 26, 5: 28, 6: 31, 
+        7: 33, 8: 36, 9: 38, 10: 41, 11: 42, 12: 43
+    };
+
+    const archonRegistry = [
+        "Archon of Acorn & Renewal/Growth", "Archon of Ember & Passion/Will",
+        "Archon of Stone & Memory/Endurance", "Archon of Moon & Mystique/Secrets",
+        "Archon of Gale & Freedom/Thought", "Archon of Frost & Silence/Stagnation",
+        "Archon of Tides & Reflection/Emotions", "Archon of Earth & Forge/Structure"
+    ];
+
+    // SECURE ENTRY SYSTEM CONTROLLERS
+    async function handleRegister() {
+        const email = document.getElementById('authEmail').value;
+        const password = document.getElementById('authPassword').value;
+        if(!email || !password) { alert("Input accurate system entry details."); return; }
+        
+        const { data, error } = await supabase.auth.signUp({ email, password });
+        if(error) { alert("Registration exception: " + error.message); }
+        else { alert("Vessel account created! Please sign in."); }
+    }
+
+    async function handleLogin() {
+        const email = document.getElementById('authEmail').value;
+        const password = document.getElementById('authPassword').value;
+        if(!email || !password) { alert("Input registration details."); return; }
+
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if(error) { alert("Sign In failure: " + error.message); }
+    }
+
+    async function handleLogout() {
+        await supabase.auth.signOut();
+        location.reload();
+    }
+
+    // Connect into the Supabase Session Stream
+    supabase.auth.onAuthStateChange((event, session) => {
+        currentUserSession = session;
+        const outPanel = document.getElementById('loggedOutZone');
+        const inPanel = document.getElementById('loggedInZone');
+        const sheetElement = document.getElementById('sheetContainer');
+
+        if (session) {
+            outPanel.style.display = 'none';
+            inPanel.style.display = 'flex';
+            sheetElement.classList.add('unlocked');
+            document.getElementById('userDisplayTag').innerText = `Vessel Account: ${session.user.email}`;
+            fetchVesselLibrary();
+        } else {
+            outPanel.style.display = 'flex';
+            inPanel.style.display = 'none';
+            sheetElement.classList.remove('unlocked');
+            loadedCloudVesselId = null;
+        }
+    });
+
+    async function fetchVesselLibrary() {
+        if(!currentUserSession) return;
+        const { data, error } = await supabase
+            .from('character_vessels')
+            .select('id, character_name')
+            .order('updated_at', { ascending: false });
+
+        if(error) { console.error("Library extraction crash", error); return; }
+
+        const drop = document.getElementById('activeVesselDrop');
+        drop.innerHTML = '<option value="">-- Summon Assigned Vessel --</option>';
+        data.forEach(vess => {
+            drop.innerHTML += `<option value="${vess.id}">${vess.character_name}</option>`;
+        });
+
+        if(loadedCloudVesselId) {
+            drop.value = loadedCloudVesselId;
+        }
+    }
+
+    async function createNewVesselInCloud() {
+        if(!currentUserSession) return;
+        const newName = prompt("Designate Character Vessel Name:", "Unnamed Vessel");
+        if(!newName) return;
+
+        const blankBlueprint = { characterName: newName, val_str: 7, val_dex: 7, val_wil: 7 };
+
+        const { data, error } = await supabase
+            .from('character_vessels')
+            .insert([{ character_name: newName, sheet_data: blankBlueprint, user_id: currentUserSession.user.id }])
+            .select();
+
+        if(error) { alert("Failed creating data vessel row: " + error.message); }
+        else if (data && data[0]) {
+            loadedCloudVesselId = data[0].id;
+            await fetchVesselLibrary();
+            switchActiveVesselToId(loadedCloudVesselId);
+        }
+    }
+
+    async function switchActiveVessel() {
+        const selectedId = document.getElementById('activeVesselDrop').value;
+        if(!selectedId) return;
+        switchActiveVesselToId(selectedId);
+    }
+
+    async function switchActiveVesselToId(vesselId) {
+        isCloudLoadingInProgress = true;
+        loadedCloudVesselId = vesselId;
+
+        const { data, error } = await supabase
+            .from('character_vessels')
+            .select('*')
+            .eq('id', vesselId)
+            .single();
+
+        if(error) { alert("Failed downloading sheet matrix"); isCloudLoadingInProgress = false; return; }
+
+        if(data && data.sheet_data) {
+            const cloudPayload = data.sheet_data;
+            cachedInventoryData = {};
+
+            // Clear all current forms safely
+            document.querySelectorAll('input, select, textarea').forEach(n => {
+                if(n.id) n.value = n.type === 'number' ? 0 : '';
+            });
+            document.querySelectorAll('.session-chk').forEach(n => n.classList.remove('active'));
+
+            // Rehydrate arrays from payload dictionary 
+            for(let idx = 1; idx <= 24; idx++) {
+                if(cloudPayload[`saved_item_name_${idx}`] !== undefined) {
+                    cachedInventoryData[idx] = {
+                        name: cloudPayload[`saved_item_name_${idx}`],
+                        weight: cloudPayload[`saved_item_weight_${idx}`]
+                    };
+                }
+            }
+
+            Object.keys(cloudPayload).forEach(key => {
+                const node = document.getElementById(key);
+                if(!node) return;
+
+                if(node.classList.contains('session-chk')) {
+                    if(cloudPayload[key]) node.classList.add('active');
+                    else node.classList.remove('active');
+                } else if(node.classList.contains('counter-display') || key === 'globalSuccessCount' || key === 'critMarkersDisplay') {
+                    node.innerText = cloudPayload[key];
+                } else {
+                    node.value = cloudPayload[key];
+                }
+            });
+        }
+
+        runCalculations();
+        refreshTrackers();
+        updateCombatProficiencyValue();
+        
+        isCloudLoadingInProgress = false;
+        document.getElementById('activeVesselDrop').value = vesselId;
+    }
+
+    // TRANSACTION DATA PIPELINES
+    async function persistState() {
+        if (!currentUserSession || !loadedCloudVesselId || isCloudLoadingInProgress) return;
+
+        const syncPacket = {};
+        document.querySelectorAll('input, select, textarea').forEach(node => {
+            if(node.id) syncPacket[node.id] = node.value;
+        });
+        document.querySelectorAll('.counter-display').forEach(node => {
+            syncPacket[node.id] = node.innerText;
+        });
+        document.querySelectorAll('.session-chk').forEach(node => {
+            syncPacket[node.id] = node.classList.contains('active');
+        });
+        syncPacket['globalSuccessCount'] = document.getElementById('globalSuccessCount').innerText;
+        syncPacket['critMarkersDisplay'] = document.getElementById('critMarkersDisplay').innerText;
+
+        for(let idx = 1; idx <= 24; idx++) {
+            const nameEl = document.getElementById(`itemName_${idx}`);
+            if(nameEl) {
+                syncPacket[`saved_item_name_${idx}`] = nameEl.value;
+                syncPacket[`saved_item_weight_${idx}`] = document.getElementById(`itemWeight_${idx}`).value;
+            }
+        }
+
+        const currentNameInput = document.getElementById('characterName').value || 'Unnamed Vessel';
+
+        // Direct async cloud push execution
+        await supabase
+            .from('character_vessels')
+            .update({ character_name: currentNameInput, sheet_data: syncPacket, updated_at: new Date() })
+            .eq('id', loadedCloudVesselId);
+    }
+
+    // PRE-EXISTING SYSTEMS LOGIC ENGINES
+    function toggleAccordion(panelId) {
+        const panel = document.getElementById(panelId);
+        const arrow = document.getElementById('accordionArrow');
+        panel.classList.toggle('open');
+        arrow.innerText = panel.classList.contains('open') ? '▼' : '▶';
+    }
+
+    function rollRandomArchon() {
+        const randIndex = Math.floor(Math.random() * archonRegistry.length);
+        document.getElementById('archonDomain').value = archonRegistry[randIndex];
+        persistState();
+    }
+
+    function validateAPRange() {
+        const field = document.getElementById('advancementPoints');
+        let currentAP = parseInt(field.value) || 0;
+        if(currentAP < 0) currentAP = 0;
+        if(currentAP > 57) currentAP = 57;
+        field.value = currentAP;
+        persistState();
+    }
+
+    function adjustGlobalSuccess(amt) {
+        const display = document.getElementById('globalSuccessCount');
+        let count = parseInt(display.innerText) || 0;
+        count = Math.max(0, count + amt);
+        display.innerText = count;
+        document.getElementById('critMarkersDisplay').innerText = Math.floor(count / 8);
+        persistState();
+    }
+
+    function tally(elementId, amt) {
+        const node = document.getElementById(elementId);
+        if(!node) return;
+        let val = parseInt(node.innerText) || 0;
+        val = Math.max(0, val + amt);
+        node.innerText = val;
+        persistState();
+    }
+
+    function flipSessionCheck(chkId) {
+        document.getElementById(chkId).classList.toggle('active');
+        persistState();
+    }
+
+    function flipEquipCheck(chkId) {
+        document.getElementById(chkId).classList.toggle('active');
+        updateCombatProficiencyValue();
+    }
+
+    function updateCombatProficiencyValue() {
+        const baseMaxNode = document.getElementById('profM_5');
+        const currentScoreNode = document.getElementById('profC_5');
+        if(!baseMaxNode || !currentScoreNode) return;
+        
+        let baseMaxVal = parseInt(baseMaxNode.value) || 0;
+        let runningModifierSum = 0;
+
+        if (document.getElementById('weapEquip_1') && document.getElementById('weapEquip_1').classList.contains('active')) {
+            runningModifierSum += parseInt(document.getElementById('weapMod_1').value) || 0;
+        }
+        if (document.getElementById('weapEquip_2') && document.getElementById('weapEquip_2').classList.contains('active')) {
+            runningModifierSum += parseInt(document.getElementById('weapMod_2').value) || 0;
+        }
+
+        currentScoreNode.value = baseMaxVal + runningModifierSum;
+        persistState();
+    }
+
+    function runCalculations() {
+        cacheInventoryValues();
+
+        const structuralNodes = ['str', 'dex', 'wil'];
+        const subSkillMaps = {
+            str: ['endurance', 'grip'], dex: ['reaction', 'grace'], wil: ['focus', 'resolve']
+        };
+
+        structuralNodes.forEach(nodeKey => {
+            let elementInput = document.getElementById(`val_${nodeKey}`);
+            let parsedVal = parseInt(elementInput.value) || 2;
+            if(parsedVal < 2) parsedVal = 2; 
+            if(parsedVal > 12) parsedVal = 12;
+            elementInput.value = parsedVal;
+
+            const referenceBase = conversionTable[parsedVal] || 33;
+            let currentAllocPoints = 0;
+
+            subSkillMaps[nodeKey].forEach(skillKey => {
+                let allocation = parseInt(document.getElementById(`alloc_${skillKey}`).value) || 0;
+                currentAllocPoints += allocation;
+                
+                document.getElementById(`base_${skillKey}`).innerText = referenceBase + "%";
+                document.getElementById(`total_${skillKey}`).innerText = (referenceBase + allocation) + "%";
+            });
+
+            const remainingBalance = parsedVal - currentAllocPoints;
+            const targetTrackerLabel = document.getElementById(`pool_${nodeKey}`);
+            targetTrackerLabel.innerText = `Points Available: ${remainingBalance}`;
+            targetTrackerLabel.style.color = remainingBalance < 0 ? 'var(--accent-blood)' : 'var(--text-muted)';
+        });
+
+        reconstructInventorySlots();
+    }
+
+    function cacheInventoryValues() {
+        for(let idx = 1; idx <= 24; idx++) {
+            const nameEl = document.getElementById(`itemName_${idx}`);
+            const weightEl = document.getElementById(`itemWeight_${idx}`);
+            if(nameEl && weightEl) {
+                cachedInventoryData[idx] = { name: nameEl.value, weight: weightEl.value };
+            }
+        }
+    }
+
+    function reconstructInventorySlots() {
+        const forceVal = parseInt(document.getElementById('val_str').value) || 2;
+        const speedVal = parseInt(document.getElementById('val_dex').value) || 2;
+        const inventoryLimitMax = forceVal + speedVal;
+
+        const inventoryTarget = document.getElementById('inventoryMountElement');
+        if(!inventoryTarget) return;
+        inventoryTarget.innerHTML = '';
+
+        for(let idx = 1; idx <= inventoryLimitMax; idx++) {
+            const currentCache = cachedInventoryData[idx] || { name: '', weight: '0' };
+            inventoryTarget.innerHTML += `
+                <div style="display:grid; grid-template-columns: 2.5fr 1.2fr; gap:4px; margin-bottom:5px;">
+                    <input type="text" id="itemName_${idx}" value="${currentCache.name}" placeholder="Item allocation ${idx}" style="background:#000; border:1px solid var(--border-color); color:white; padding:3px; border-radius:3px; font-size:11px;" oninput="recalculatePayloadWeight()">
+                    <select id="itemWeight_${idx}" style="background:#000; border:1px solid var(--border-color); color:white; padding:2px; border-radius:3px; font-size:11px;" onchange="recalculatePayloadWeight()">
+                        <option value="0" ${currentCache.weight == '0' ? 'selected' : ''}>Empty</option>
+                        <option value="1" ${currentCache.weight == '1' ? 'selected' : ''}>Normal (1)</option>
+                        <option value="2" ${currentCache.weight == '2' ? 'selected' : ''}>Large (2)</option>
+                    </select>
+                </div>
+            `;
+        }
+        recalculatePayloadWeightNoReconstruct(inventoryLimitMax);
+    }
+
+    function recalculatePayloadWeight() {
+        const forceVal = parseInt(document.getElementById('val_str').value) || 2;
+        const speedVal = parseInt(document.getElementById('val_dex').value) || 2;
+        recalculatePayloadWeightNoReconstruct(forceVal + speedVal);
+    }
+
+    function recalculatePayloadWeightNoReconstruct(maxSlots) {
+        let trackingWeightSum = 0;
+        for(let loopIdx = 1; loopIdx <= maxSlots; loopIdx++) {
+            const rowWeightEl = document.getElementById(`itemWeight_${loopIdx}`);
+            if(rowWeightEl) trackingWeightSum += parseInt(rowWeightEl.value) || 0;
+        }
+
+        const displayLabel = document.getElementById('weightSlotDisplay');
+        if(displayLabel) {
+            displayLabel.innerText = `Slots: ${trackingWeightSum} / ${maxSlots}`;
+            displayLabel.style.color = trackingWeightSum > maxSlots ? 'var(--accent-blood)' : 'var(--accent-gold)';
+        }
+        persistState();
+    }
+
+    function refreshTrackers() {
+        const rCur = parseInt(document.getElementById('rmCur').value) || 0;
+        const rMax = parseInt(document.getElementById('rmMax').value) || 120;
+        document.getElementById('rmTxt').innerText = `${rCur} / ${rMax}`;
+        document.getElementById('rmMeter').style.width = Math.min(Math.max((rCur / rMax) * 100, 0), 100) + '%';
+
+        const tCur = parseInt(document.getElementById('taintCur').value) || 0;
+        document.getElementById('taintTxt').innerText = `${tCur} / 100`;
+        document.getElementById('taintMeter').style.width = Math.min(Math.max((tCur / 100) * 100, 0), 100) + '%';
+
+        const vCur = parseInt(document.getElementById('veilCur').value) || 0;
+        document.getElementById('veilTxt').innerText = `${vCur} / 100`;
+        document.getElementById('veilMeter').style.width = Math.min(Math.max((vCur / 100) * 100, 0), 100) + '%';
+
+        persistState();
+    }
+
+    function triggerSigilRoll(sigilLabel, attrFieldId, tokenElementId) {
+        const tokenDisplayNode = document.getElementById(tokenElementId);
+        let availableTokens = parseInt(tokenDisplayNode.innerText) || 0;
+
+        if (availableTokens <= 0) {
+            document.getElementById('rollOutput').innerHTML = `
+                <span style="color:var(--accent-blood); font-size:10px; text-transform:uppercase;">Roll Action Cancelled</span>
+                <div>No remaining ${sigilLabel} Tokens available.</div>
+            `;
+            return;
+        }
+
+        availableTokens = Math.max(0, availableTokens - 1);
+        tokenDisplayNode.innerText = availableTokens;
+
+        const attributeModifier = parseInt(document.getElementById(attrFieldId).value) || 0;
+        const d20Roll = Math.floor(Math.random() * 20) + 1;
+        const overallSum = d20Roll + attributeModifier;
+
+        let dynamicDefenseReport = "";
+        if (overallSum > 20) dynamicDefenseReport = "<span style='color:var(--accent-gold);'>Success (Mitigated Damage)</span>";
+        else dynamicDefenseReport = "<span style='color:var(--text-muted);'>Check Complete</span>";
+        
+        if (d20Roll === 20 || d20Roll === 1) {
+            dynamicDefenseReport = "<span style='color:var(--accent-green);'>🔥 Critical Structural Nullification</span>";
+        }
+
+        document.getElementById('rollOutput').innerHTML = `
+            <span style="color:var(--text-muted); font-size:10px; text-transform:uppercase;">Sigil ${sigilLabel} Matrix Fired</span>
+            <div style="font-size:13px; margin:2px 0;">d20 [${d20Roll}] + Mod [${attributeModifier}] = <strong>Total ${overallSum}</strong></div>
+            <div style="font-size:11px;">${dynamicDefenseReport}</div>
+        `;
+        persistState();
+    }
+
+    function rollDiceTray() {
+        const count = parseInt(document.getElementById('diceQty').value) || 1;
+        const faceVal = parseInt(document.getElementById('diceSides').value) || 100;
+        const windowOutput = document.getElementById('rollOutput');
+
+        let numericResults = [];
+        let runningTotal = 0;
+        for(let loop = 0; loop < count; loop++) {
+            let singleRoll = Math.floor(Math.random() * faceVal) + 1;
+            numericResults.push(singleRoll);
+            runningTotal += singleRoll;
+        }
+
+        let dynamicMessage = `Output [ ${numericResults.join(', ')} ]`;
+        if(count > 1) dynamicMessage += `<br>Matrix Total: ${runningTotal}`;
+        
+        if(faceVal === 100 && count === 1) {
+            if(runningTotal <= 5) dynamicMessage += "<br><span style='color:var(--accent-green);'>🔥 CRITICAL SUCCESS LAYER TRIGGERED</span>";
+            else if(runningTotal >= 96) dynamicMessage += "<br><span style='color:var(--accent-blood);'>💀 BREAK CRITICAL FUMBLE PARADOX</span>";
+        }
+        windowOutput.innerHTML = dynamicMessage;
+    }
+
+    function rollOracleParadigm() {
+        const oracleDieResult = Math.floor(Math.random() * 100) + 1;
+        let abstractJudgment = "";
+        let visualHexColor = "var(--accent-gold)";
+
+        if (oracleDieResult <= 5) { abstractJudgment = "YES, AND..."; visualHexColor = "#4ade80"; }
+        else if (oracleDieResult <= 33) { abstractJudgment = "YES"; visualHexColor = "#22c55e"; }
+        else if (oracleDieResult <= 67) { abstractJudgment = "YES, BUT..."; visualHexColor = "#a3e635"; }
+        else if (oracleDieResult <= 81) { abstractJudgment = "NO, BUT..."; visualHexColor = "#fb923c"; }
+        else if (oracleDieResult <= 94) { abstractJudgment = "NO"; visualHexColor = "#f87171"; }
+        else { abstractJudgment = "NO, AND..."; visualHexColor = "#ef4444"; }
+
+        document.getElementById('rollOutput').innerHTML = `
+            <span style="color:var(--text-muted); font-size:10px; letter-spacing:1px; text-transform:uppercase;">The Fate Oracle Decides</span>
+            <div style="font-size:14px; color:${visualHexColor}; margin-top:2px; font-weight:bold;">[Roll ${oracleDieResult}] — ${abstractJudgment}</div>
+        `;
+    }
+</script>
+
+</body>
+</html>
