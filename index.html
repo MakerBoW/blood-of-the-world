@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blood of the World - Cloud Protocol v5.1</title>
+    <title>Blood of the World - Cloud Protocol v5.2</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -37,10 +37,10 @@
         .container { max-width: 1350px; margin: 0 auto; display: grid; grid-template-columns: repeat(12, 1fr); gap: 15px; opacity: 0.4; pointer-events: none; transition: opacity 0.3s ease; }
         .container.unlocked { opacity: 1; pointer-events: auto; }
         
-        /* Header Region Restructured for Equal Balance */
+        /* Header Region Restructured for Expanded Archon Space */
         header { grid-column: span 12; background: var(--panel-bg); border: 1px solid var(--border-color); padding: 15px; border-radius: 6px; display: grid; grid-template-columns: repeat(12, 1fr); gap: 15px; border-left: 5px solid var(--accent-blood); }
-        .header-column-left { grid-column: span 8; display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px; }
-        .header-column-right { grid-column: span 4; background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border-color); border-radius: 4px; padding: 8px 12px; display: flex; gap: 12px; align-items: center; justify-content: space-between; }
+        .header-column-left { grid-column: span 9; display: grid; grid-template-columns: 1.5fr 1.2fr 2.5fr 1fr 1fr; gap: 12px; }
+        .header-column-right { grid-column: span 3; background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border-color); border-radius: 4px; padding: 8px 12px; display: flex; gap: 12px; align-items: center; justify-content: space-between; }
         .header-field { display: flex; flex-direction: column; justify-content: center; width: 100%; }
         .header-field label { font-size: 10px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 4px; font-weight: bold; }
         .header-field input, .header-field select { background: rgba(0,0,0,0.4); border: 1px solid var(--border-color); color: white; padding: 6px 10px; border-radius: 4px; font-size: 13px; width: 100%; }
@@ -53,6 +53,7 @@
         @media (max-width: 1024px) {
             .col-left, .col-center, .col-right { grid-column: span 12; }
             .header-column-left, .header-column-right { grid-column: span 12; }
+            .header-column-left { grid-template-columns: repeat(2, 1fr); }
         }
 
         /* Card Framework */
@@ -107,7 +108,8 @@
         .meter-fill { height: 100%; width: 0%; transition: width 0.2s ease; }
         .fill-rm { background: linear-gradient(90deg, #0284c7, #38bdf8); }
         .fill-taint { background: linear-gradient(90deg, #7e22ce, #c084fc); }
-        .fill-veil { background: linear-gradient(90deg, #be123c, #fb7185); }
+        .fill-corruption { background: linear-gradient(90deg, #b91c1c, #f43f5e); }
+        .fill-veil { background: linear-gradient(90deg, #4b5563, #9ca3af); }
         .tracker-control-row { display: flex; gap: 8px; align-items: center; }
         .tracker-control-row input { background: #000; border: 1px solid var(--border-color); color: white; padding: 4px; text-align: center; border-radius: 4px; width: 55px; font-size: 12px; }
 
@@ -184,11 +186,7 @@
                 <input type="text" id="archonDomain" placeholder="Click roll or write..." oninput="persistState()">
             </div>
             <div class="header-field">
-                <label>Corruption Index</label>
-                <input type="text" id="corruptionIndex" placeholder="0%" oninput="persistState()">
-            </div>
-            <div class="header-field">
-                <label>RMC Bank Balance</label>
+                <label>RMC Balance</label>
                 <input type="number" id="rmcBalance" value="0" oninput="persistState()">
             </div>
             <div class="header-field">
@@ -327,13 +325,12 @@
 
                 <div class="tracker-node" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
                     <div class="tracker-header-labels">
-                        <span>Taint Allocation</span>
-                        <span id="taintTxt">0 / 100</span>
+                        <span style="color:#a78bfa; font-weight:bold;">Taint Allocation Matrix</span>
+                        <span id="taintTxt">0 Accumulated</span>
                     </div>
                     <div class="meter-container"><div id="taintMeter" class="meter-fill fill-taint" style="width: 0%;"></div></div>
                     <div class="tracker-control-row">
-                        <input type="number" id="taintCur" value="0" min="0" max="100" onchange="refreshTrackers()">
-                        <span>/ 100</span>
+                        <input type="number" id="taintCur" value="0" min="0" onchange="refreshTrackers()">
                         <div class="counter-tool" style="margin-left:auto;">
                             <label>Cleanse Days</label>
                             <button class="counter-btn" onclick="tally('cleanseDays',-1)">-</button>
@@ -345,7 +342,16 @@
 
                 <div class="tracker-node" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
                     <div class="tracker-header-labels">
-                        <span style="color:#fb7185;">The Global Veil Vector</span>
+                        <span style="color:#f43f5e; font-weight:bold;">Calculated Corruption Index</span>
+                        <span id="corruptionTxt" style="color:#f43f5e; font-weight:bold;">0%</span>
+                    </div>
+                    <div class="meter-container"><div id="corruptionMeter" class="meter-fill fill-corruption" style="width: 0%;"></div></div>
+                    <div style="font-size:10px; color:var(--text-muted); font-style:italic;">Derived from Taint vectors: 100 Taint ➔ +35% Corruption</div>
+                </div>
+
+                <div class="tracker-node" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
+                    <div class="tracker-header-labels">
+                        <span style="color:var(--text-muted);">The Global Veil Vector</span>
                         <span id="veilTxt">0 / 100</span>
                     </div>
                     <div class="meter-container"><div id="veilMeter" class="meter-fill fill-veil" style="width: 0%;"></div></div>
@@ -425,7 +431,7 @@
                     <div class="counter-tool"><button class="counter-btn" onclick="tally('crit_prof_8',-1)">-</button><span class="counter-display" id="crit_prof_8">0</span><button class="counter-btn" onclick="tally('crit_prof_8',1)">+</button></div>
                 </div>
             </div>
-            <div class="bug-fix-tag">Vessel Logic v5.1 • Fluid System Mechanics Installed</div>
+            <div class="bug-fix-tag">Vessel Logic v5.2 • Fluid Taint Vectors Calibrated</div>
         </div>
     </div>
 
@@ -811,7 +817,7 @@
         `;
     }
 
-    // MANUALLY TRIPPED RESOURCE HOARD SYNTHESIS CORE
+    // RESOURCE HOARD SYNTHESIS CONTROLLERS
     function adjustArchonResource(resourceId, amt) {
         const node = document.getElementById(resourceId);
         if(!node) return;
@@ -897,7 +903,6 @@
         updateCombatProficiencyValue();
     }
 
-    // RE-INTEGRATED LISTENING ALGORITHM WITHIN FREE INPUT ARCHITECTURE
     function updateCombatProficiencyValue() {
         const baseMaxNode = document.getElementById('profM_5');
         const currentScoreNode = document.getElementById('profC_5');
@@ -962,7 +967,6 @@
         }
     }
 
-    // UPDATED SLOTS ENGINE BOUND TO NEW HEADERS PROFILES
     function reconstructInventorySlots() {
         const forceVal = parseInt(document.getElementById('val_str').value) || 2;
         const speedVal = parseInt(document.getElementById('val_dex').value) || 2;
@@ -1009,15 +1013,25 @@
         persistState();
     }
 
+    // NEW FLUID DYNAMIC MATH LOGIC VECTOR FOR TAINT OVERFLOWS
     function refreshTrackers() {
         const rCur = parseInt(document.getElementById('rmCur').value) || 0;
         const rMax = parseInt(document.getElementById('rmMax').value) || 120;
         document.getElementById('rmTxt').innerText = `${rCur} / ${rMax}`;
         document.getElementById('rmMeter').style.width = Math.min(Math.max((rCur / rMax) * 100, 0), 100) + '%';
 
+        // Taint calculation rules conversion processing
         const tCur = parseInt(document.getElementById('taintCur').value) || 0;
-        document.getElementById('taintTxt').innerText = `${tCur} / 100`;
-        document.getElementById('taintMeter').style.width = Math.min(Math.max((tCur / 100) * 100, 0), 100) + '%';
+        
+        // Calculate conversion points (100 Taint = 35% Corruption Index)
+        const computedCorruptionFactor = Math.floor(tCur / 100) * 35;
+        const visualSubProgressPercent = tCur % 100;
+        
+        document.getElementById('taintTxt').innerText = `${tCur} Points Accumulated`;
+        document.getElementById('taintMeter').style.width = visualSubProgressPercent + '%';
+
+        document.getElementById('corruptionTxt').innerText = `${computedCorruptionFactor}%`;
+        document.getElementById('corruptionMeter').style.width = Math.min(computedCorruptionFactor, 100) + '%';
 
         const vCur = parseInt(document.getElementById('veilCur').value) || 0;
         document.getElementById('veilTxt').innerText = `${vCur} / 100`;
