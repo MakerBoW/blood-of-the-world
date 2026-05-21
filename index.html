@@ -936,7 +936,7 @@
             let elementInput = document.getElementById(`val_${nodeKey}`);
             let parsedVal = parseInt(elementInput.value) || 2;
             if(parsedVal < 2) parsedVal = 2; 
-            if(parsedVal > 12) parsedVal = 12;
+            if(parsedVal > 18) parsedVal = 18;
             elementInput.value = parsedVal;
 
             const referenceBase = conversionTable[parsedVal] || 33;
