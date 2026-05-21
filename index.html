@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blood of the World - Cloud Protocol v4.0</title>
+    <title>Blood of the World - Cloud Protocol v5.0</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -38,8 +38,10 @@
         .container.unlocked { opacity: 1; pointer-events: auto; }
         
         /* Header Region */
-        header { grid-column: span 12; background: var(--panel-bg); border: 1px solid var(--border-color); padding: 15px; border-radius: 6px; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; border-left: 5px solid var(--accent-blood); }
-        .header-field { display: flex; flex-direction: column; justify-content: center; }
+        header { grid-column: span 12; background: var(--panel-bg); border: 1px solid var(--border-color); padding: 15px; border-radius: 6px; display: grid; grid-template-columns: repeat(12, 1fr); gap: 15px; border-left: 5px solid var(--accent-blood); }
+        .header-column-left { grid-column: span 7; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; }
+        .header-column-right { grid-column: span 5; background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border-color); border-radius: 4px; padding: 10px; display: flex; gap: 15px; align-items: center; justify-content: space-around; }
+        .header-field { display: flex; flex-direction: column; justify-content: center; width: 100%; }
         .header-field label { font-size: 10px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 4px; font-weight: bold; }
         .header-field input, .header-field select { background: rgba(0,0,0,0.4); border: 1px solid var(--border-color); color: white; padding: 6px 10px; border-radius: 4px; font-size: 13px; }
         
@@ -50,6 +52,7 @@
 
         @media (max-width: 1024px) {
             .col-left, .col-center, .col-right { grid-column: span 12; }
+            .header-column-left, .header-column-right { grid-column: span 12; }
         }
 
         /* Card Framework */
@@ -84,6 +87,12 @@
         .skill-item-row input[type="number"] { background: #000; border: 1px solid var(--border-color); color: white; text-align: center; padding: 2px; border-radius: 3px; font-size: 12px; width: 100%; }
         .skill-total-val { font-weight: bold; color: var(--accent-gold); text-align: center; }
         
+        /* Click to Roll Action Label Link */
+        .clickable-roll-label { cursor: pointer; font-weight: bold; color: var(--text-main); position: relative; display: inline-block; }
+        .clickable-roll-label:hover { color: var(--accent-gold); text-shadow: 0 0 4px rgba(217, 119, 6, 0.4); }
+        .clickable-roll-label::after { content: ' 🎲'; font-size: 9px; opacity: 0; transition: opacity 0.15s ease; }
+        .clickable-roll-label:hover::after { opacity: 1; }
+
         /* Checkbox Custom Style */
         .session-chk-label { display: flex; justify-content: center; align-items: center; }
         .session-chk { width: 14px; height: 14px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.3); border-radius: 2px; cursor: pointer; display: inline-block; position: relative; }
@@ -153,36 +162,59 @@
             <option value="">-- Summon Assigned Vessel --</option>
         </select>
         <button class="auth-btn primary" onclick="createNewVesselInCloud()">+ Brand New Vessel</button>
-        <button class="auth-btn" style="background:#bf2121" onclick="handleLogout()">Disconnect</button>
+        <button class="auth-btn" style="background:#bf2121; font-weight:bold;" onclick="deleteActiveCloudVessel()">Sacrifice Vessel (Delete)</button>
+        <button class="auth-btn" style="background:#444452" onclick="handleLogout()">Disconnect</button>
     </div>
 </div>
 
 <div class="container" id="sheetContainer">
     
     <header>
-        <div class="header-field" style="grid-column: span 2;">
-            <label>Character Name</label>
-            <input type="text" id="characterName" oninput="persistState()">
+        <div class="header-column-left">
+            <div class="header-field">
+                <label>Character Name</label>
+                <input type="text" id="characterName" oninput="persistState()">
+            </div>
+            <div class="header-field">
+                <label>Background</label>
+                <input type="text" id="characterBackground" oninput="persistState()">
+            </div>
+            <div class="header-field">
+                <label>Marked Archon <button class="random-btn" onclick="rollRandomArchon()">Roll</button></label>
+                <input type="text" id="archonDomain" placeholder="Click roll or write..." oninput="persistState()">
+            </div>
+            <div class="header-field">
+                <label>Corruption Index</label>
+                <input type="text" id="corruptionIndex" placeholder="0%" oninput="persistState()">
+            </div>
+            <div class="header-field">
+                <label>RMC Bank Balance</label>
+                <input type="number" id="rmcBalance" value="0" oninput="persistState()">
+            </div>
+            <div class="header-field">
+                <label style="color:var(--accent-gold)">Advancement (AP)</label>
+                <input type="number" id="advancementPoints" value="3" min="0" max="57" onchange="validateAPRange()">
+            </div>
         </div>
-        <div class="header-field" style="grid-column: span 2;">
-            <label>Background</label>
-            <input type="text" id="characterBackground" oninput="persistState()">
-        </div>
-        <div class="header-field" style="grid-column: span 2;">
-            <label>Marked Archon <button class="random-btn" onclick="rollRandomArchon()">Roll</button></label>
-            <input type="text" id="archonDomain" placeholder="Click roll or write..." oninput="persistState()">
-        </div>
-        <div class="header-field">
-            <label>Corruption Index</label>
-            <input type="text" id="corruptionIndex" placeholder="0%" oninput="persistState()">
-        </div>
-        <div class="header-field">
-            <label>RMC Bank Balance</label>
-            <input type="number" id="rmcBalance" value="0" oninput="persistState()">
-        </div>
-        <div class="header-field">
-            <label style="color:var(--accent-gold)">Advancement (AP)</label>
-            <input type="number" id="advancementPoints" value="3" min="0" max="57" onchange="validateAPRange()">
+
+        <div class="header-column-right">
+            <div class="header-field" style="align-items:center;">
+                <label style="color:var(--accent-gold); font-weight:bold; margin-bottom:6px;">Archon Favor Tokens</label>
+                <div class="counter-tool" style="padding:6px 12px; background:#000;">
+                    <button class="counter-btn" style="width:22px; height:22px; font-size:14px;" onclick="adjustArchonResource('favorTokens', -1)">-</button>
+                    <span class="counter-display" id="favorTokens" style="font-size:16px; min-width:24px; color:var(--accent-gold)">0</span>
+                    <button class="counter-btn" style="width:22px; height:22px; font-size:14px;" onclick="adjustArchonResource('favorTokens', 1)">+</button>
+                </div>
+            </div>
+            <div class="header-field" style="align-items:center;">
+                <label style="color:var(--text-muted); margin-bottom:6px;">Favor Glyphs (3 Max)</label>
+                <div class="counter-tool" style="padding:6px 12px; background:#000;">
+                    <button class="counter-btn" style="width:22px; height:22px; font-size:14px;" onclick="adjustArchonResource('favorGlyphs', -1)">-</button>
+                    <span class="counter-display" id="favorGlyphs" style="font-size:16px; min-width:24px;">0</span>
+                    <button class="counter-btn" style="width:22px; height:22px; font-size:14px;" onclick="adjustArchonResource('favorGlyphs', 1)">+</button>
+                </div>
+                <span style="font-size:9px; color:var(--text-muted); margin-top:4px;">3 Glyphs ➔ 1 Token</span>
+            </div>
         </div>
     </header>
 
@@ -206,7 +238,7 @@
         </div>
 
         <div class="card">
-            <div class="card-title">Core Attributes &amp; Skill Matrices <span>3d6kh2 Engine</span></div>
+            <div class="card-title">Core Attributes &amp; Skill Matrices <span>Click Label to Roll d100 under Value</span></div>
             
             <div class="attr-wrapper str">
                 <div class="attr-header">
@@ -222,10 +254,10 @@
                     <span>Skill Node</span><span>Base</span><span>Alloc</span><span>Total</span><span>Crit</span><span>End Session</span>
                 </div>
                 <div class="skill-item-row">
-                    <span>Endurance</span><span id="base_endurance">33%</span><input type="number" id="alloc_endurance" value="0" onchange="runCalculations()"><span id="total_endurance" class="skill-total-val">33%</span><div class="counter-tool"><button class="counter-btn" onclick="tally('crit_sk_end',-1)">-</button><span class="counter-display" id="crit_sk_end">0</span><button class="counter-btn" onclick="tally('crit_sk_end',1)">+</button></div><div class="session-chk-label"><div class="session-chk" id="chk_endurance" onclick="flipSessionCheck('chk_endurance')"></div></div>
+                    <span class="clickable-roll-label" onclick="executeSkillD100Check('Endurance', 'total_endurance', 'chk_endurance')">Endurance</span><span id="base_endurance">33%</span><input type="number" id="alloc_endurance" value="0" onchange="runCalculations()"><span id="total_endurance" class="skill-total-val">33%</span><div class="counter-tool"><button class="counter-btn" onclick="tally('crit_sk_end',-1)">-</button><span class="counter-display" id="crit_sk_end">0</span><button class="counter-btn" onclick="tally('crit_sk_end',1)">+</button></div><div class="session-chk-label"><div class="session-chk" id="chk_endurance" onclick="flipSessionCheck('chk_endurance')"></div></div>
                 </div>
                 <div class="skill-item-row">
-                    <span>Grip</span><span id="base_grip">33%</span><input type="number" id="alloc_grip" value="0" onchange="runCalculations()"><span id="total_grip" class="skill-total-val">33%</span><div class="counter-tool"><button class="counter-btn" onclick="tally('crit_sk_grp',-1)">-</button><span class="counter-display" id="crit_sk_grp">0</span><button class="counter-btn" onclick="tally('crit_sk_grp',1)">+</button></div><div class="session-chk-label"><div class="session-chk" id="chk_grip" onclick="flipSessionCheck('chk_grip')"></div></div>
+                    <span class="clickable-roll-label" onclick="executeSkillD100Check('Grip', 'total_grip', 'chk_grip')">Grip</span><span id="base_grip">33%</span><input type="number" id="alloc_grip" value="0" onchange="runCalculations()"><span id="total_grip" class="skill-total-val">33%</span><div class="counter-tool"><button class="counter-btn" onclick="tally('crit_sk_grp',-1)">-</button><span class="counter-display" id="crit_sk_grp">0</span><button class="counter-btn" onclick="tally('crit_sk_grp',1)">+</button></div><div class="session-chk-label"><div class="session-chk" id="chk_grip" onclick="flipSessionCheck('chk_grip')"></div></div>
                 </div>
                 <div style="text-align:right; font-size:10px; color:var(--text-muted); font-style:italic;" id="pool_str">Points Available: 7</div>
             </div>
@@ -244,10 +276,10 @@
                     <span>Skill Node</span><span>Base</span><span>Alloc</span><span>Total</span><span>Crit</span><span>End Session</span>
                 </div>
                 <div class="skill-item-row">
-                    <span>Reaction</span><span id="base_reaction">33%</span><input type="number" id="alloc_reaction" value="0" onchange="runCalculations()"><span id="total_reaction" class="skill-total-val">33%</span><div class="counter-tool"><button class="counter-btn" onclick="tally('crit_sk_rea',-1)">-</button><span class="counter-display" id="crit_sk_rea">0</span><button class="counter-btn" onclick="tally('crit_sk_rea',1)">+</button></div><div class="session-chk-label"><div class="session-chk" id="chk_reaction" onclick="flipSessionCheck('chk_reaction')"></div></div>
+                    <span class="clickable-roll-label" onclick="executeSkillD100Check('Reaction', 'total_reaction', 'chk_reaction')">Reaction</span><span id="base_reaction">33%</span><input type="number" id="alloc_reaction" value="0" onchange="runCalculations()"><span id="total_reaction" class="skill-total-val">33%</span><div class="counter-tool"><button class="counter-btn" onclick="tally('crit_sk_rea',-1)">-</button><span class="counter-display" id="crit_sk_rea">0</span><button class="counter-btn" onclick="tally('crit_sk_rea',1)">+</button></div><div class="session-chk-label"><div class="session-chk" id="chk_reaction" onclick="flipSessionCheck('chk_reaction')"></div></div>
                 </div>
                 <div class="skill-item-row">
-                    <span>Grace</span><span id="base_grace">33%</span><input type="number" id="alloc_grace" value="0" onchange="runCalculations()"><span id="total_grace" class="skill-total-val">33%</span><div class="counter-tool"><button class="counter-btn" onclick="tally('crit_sk_gra',-1)">-</button><span class="counter-display" id="crit_sk_gra">0</span><button class="counter-btn" onclick="tally('crit_sk_gra',1)">+</button></div><div class="session-chk-label"><div class="session-chk" id="chk_grace" onclick="flipSessionCheck('chk_grace')"></div></div>
+                    <span class="clickable-roll-label" onclick="executeSkillD100Check('Grace', 'total_grace', 'chk_grace')">Grace</span><span id="base_grace">33%</span><input type="number" id="alloc_grace" value="0" onchange="runCalculations()"><span id="total_grace" class="skill-total-val">33%</span><div class="counter-tool"><button class="counter-btn" onclick="tally('crit_sk_gra',-1)">-</button><span class="counter-display" id="crit_sk_gra">0</span><button class="counter-btn" onclick="tally('crit_sk_gra',1)">+</button></div><div class="session-chk-label"><div class="session-chk" id="chk_grace" onclick="flipSessionCheck('chk_grace')"></div></div>
                 </div>
                 <div style="text-align:right; font-size:10px; color:var(--text-muted); font-style:italic;" id="pool_dex">Points Available: 7</div>
             </div>
@@ -266,10 +298,10 @@
                     <span>Skill Node</span><span>Base</span><span>Alloc</span><span>Total</span><span>Crit</span><span>End Session</span>
                 </div>
                 <div class="skill-item-row">
-                    <span>Focus</span><span id="base_focus">33%</span><input type="number" id="alloc_focus" value="0" onchange="runCalculations()"><span id="total_focus" class="skill-total-val">33%</span><div class="counter-tool"><button class="counter-btn" onclick="tally('crit_sk_foc',-1)">-</button><span class="counter-display" id="crit_sk_foc">0</span><button class="counter-btn" onclick="tally('crit_sk_foc',1)">+</button></div><div class="session-chk-label"><div class="session-chk" id="chk_focus" onclick="flipSessionCheck('chk_focus')"></div></div>
+                    <span class="clickable-roll-label" onclick="executeSkillD100Check('Focus', 'total_focus', 'chk_focus')">Focus</span><span id="base_focus">33%</span><input type="number" id="alloc_focus" value="0" onchange="runCalculations()"><span id="total_focus" class="skill-total-val">33%</span><div class="counter-tool"><button class="counter-btn" onclick="tally('crit_sk_foc',-1)">-</button><span class="counter-display" id="crit_sk_foc">0</span><button class="counter-btn" onclick="tally('crit_sk_foc',1)">+</button></div><div class="session-chk-label"><div class="session-chk" id="chk_focus" onclick="flipSessionCheck('chk_focus')"></div></div>
                 </div>
                 <div class="skill-item-row">
-                    <span>Resolve</span><span id="base_resolve">33%</span><input type="number" id="alloc_resolve" value="0" onchange="runCalculations()"><span id="total_resolve" class="skill-total-val">33%</span><div class="counter-tool"><button class="counter-btn" onclick="tally('crit_sk_res',-1)">-</button><span class="counter-display" id="crit_sk_res">0</span><button class="counter-btn" onclick="tally('crit_sk_res',1)">+</button></div><div class="session-chk-label"><div class="session-chk" id="chk_resolve" onclick="flipSessionCheck('chk_resolve')"></div></div>
+                    <span class="clickable-roll-label" onclick="executeSkillD100Check('Resolve', 'total_resolve', 'chk_resolve')">Resolve</span><span id="base_resolve">33%</span><input type="number" id="alloc_resolve" value="0" onchange="runCalculations()"><span id="total_resolve" class="skill-total-val">33%</span><div class="counter-tool"><button class="counter-btn" onclick="tally('crit_sk_res',-1)">-</button><span class="counter-display" id="crit_sk_res">0</span><button class="counter-btn" onclick="tally('crit_sk_res',1)">+</button></div><div class="session-chk-label"><div class="session-chk" id="chk_resolve" onclick="flipSessionCheck('chk_resolve')"></div></div>
                 </div>
                 <div style="text-align:right; font-size:10px; color:var(--text-muted); font-style:italic;" id="pool_wil">Points Available: 7</div>
             </div>
@@ -326,9 +358,9 @@
         </div>
 
         <div class="card">
-            <div class="card-title">Proficiency Framework &amp; Damage Pools (8 Slots)</div>
+            <div class="card-title">Proficiencies &amp; Pools <span>Click Name to Roll d20 + Modifier</span></div>
             <p style="font-size:10px; color:var(--text-muted); margin-bottom:8px; font-style:italic;">
-                Main: 2d6+12 | All others: 2d6+7. Tracks points and Critical hits independently.
+                Main Base Score: 2d6+12 | Others: 2d6+7. Current value fields can be completely customized.
             </p>
             
             <div class="prof-entry-row" style="font-weight:bold; font-size:10px; color:var(--text-muted); background:none; padding:0; margin-bottom:4px;">
@@ -337,63 +369,63 @@
             
             <div id="proficiencyBlock">
                 <div class="prof-entry-row">
-                    <input type="text" id="profTitle_1" value="Signature Proficiency (Main)">
+                    <input type="text" id="profTitle_1" value="Signature Proficiency (Main)" class="clickable-roll-label" style="text-align:left; color:white; border:none;" readonly onclick="executeProficiencyD20Roll('profTitle_1', 'profC_1')">
                     <input type="number" id="profC_1" value="19" onchange="persistState()">
                     <input type="number" id="profM_1" value="19" onchange="persistState()">
                     <div class="counter-tool"><button class="counter-btn" onclick="tally('crit_prof_1',-1)">-</button><span class="counter-display" id="crit_prof_1">0</span><button class="counter-btn" onclick="tally('crit_prof_1',1)">+</button></div>
                 </div>
                 <div class="prof-entry-row">
-                    <input type="text" id="profTitle_2" value="Secondary Field">
+                    <input type="text" id="profTitle_2" value="Secondary Field" class="clickable-roll-label" style="text-align:left; color:white; border:none;" readonly onclick="executeProficiencyD20Roll('profTitle_2', 'profC_2')">
                     <input type="number" id="profC_2" value="14" onchange="persistState()">
                     <input type="number" id="profM_2" value="14" onchange="persistState()">
                     <div class="counter-tool"><button class="counter-btn" onclick="tally('crit_prof_2',-1)">-</button><span class="counter-display" id="crit_prof_2">0</span><button class="counter-btn" onclick="tally('crit_prof_2',1)">+</button></div>
                 </div>
                 <div class="prof-entry-row">
-                    <input type="text" id="profTitle_3" value="Tertiary Field">
+                    <input type="text" id="profTitle_3" value="Tertiary Field" class="clickable-roll-label" style="text-align:left; color:white; border:none;" readonly onclick="executeProficiencyD20Roll('profTitle_3', 'profC_3')">
                     <input type="number" id="profC_3" value="14" onchange="persistState()">
                     <input type="number" id="profM_3" value="14" onchange="persistState()">
                     <div class="counter-tool"><button class="counter-btn" onclick="tally('crit_prof_3',-1)">-</button><span class="counter-display" id="crit_prof_3">0</span><button class="counter-btn" onclick="tally('crit_prof_3',1)">+</button></div>
                 </div>
                 <div class="prof-entry-row">
-                    <input type="text" id="profTitle_4" value="Quaternary Field">
+                    <input type="text" id="profTitle_4" value="Quaternary Field" class="clickable-roll-label" style="text-align:left; color:white; border:none;" readonly onclick="executeProficiencyD20Roll('profTitle_4', 'profC_4')">
                     <input type="number" id="profC_4" value="14" onchange="persistState()">
                     <input type="number" id="profM_4" value="14" onchange="persistState()">
                     <div class="counter-tool"><button class="counter-btn" onclick="tally('crit_prof_4',-1)">-</button><span class="counter-display" id="crit_prof_4">0</span><button class="counter-btn" onclick="tally('crit_prof_4',1)">+</button></div>
                 </div>
                 
                 <div class="prof-entry-row" style="border-left: 2px solid var(--accent-blood);">
-                    <select id="profTitle_5" onchange="persistState()">
+                    <select id="profTitle_5" onchange="persistState()" class="clickable-roll-label" style="color:var(--accent-gold);" onclick="executeProficiencyD20Roll('profTitle_5', 'profC_5', true)">
                         <option value="Precision Strike">Precision Strike (Combat)</option>
                         <option value="Heavy Blow">Heavy Blow (Combat)</option>
                         <option value="Disturb Hit">Disturb Hit (Combat)</option>
                     </select>
-                    <input type="number" id="profC_5" value="14" readonly style="color:var(--accent-gold); font-weight:bold; background:rgba(0,0,0,0.6);" title="Calculated as Base Max + Equipped Weapon Modifiers">
-                    <input type="number" id="profM_5" value="14" onchange="updateCombatProficiencyValue()">
+                    <input type="number" id="profC_5" value="14" onchange="persistState()" style="color:var(--accent-gold); font-weight:bold; background:#000;" title="Manually alter current score baseline">
+                    <input type="number" id="profM_5" value="14" onchange="persistState()">
                     <div class="counter-tool"><button class="counter-btn" onclick="tally('crit_prof_5',-1)">-</button><span class="counter-display" id="crit_prof_5">0</span><button class="counter-btn" onclick="tally('crit_prof_5',1)">+</button></div>
                 </div>
                 
                 <div class="prof-entry-row">
-                    <input type="text" id="profTitle_6" placeholder="Auxiliary Field 6">
+                    <input type="text" id="profTitle_6" value="Auxiliary Field 6" class="clickable-roll-label" style="text-align:left; color:white; border:none;" readonly onclick="executeProficiencyD20Roll('profTitle_6', 'profC_6')">
                     <input type="number" id="profC_6" value="14" onchange="persistState()">
                     <input type="number" id="profM_6" value="14" onchange="persistState()">
                     <div class="counter-tool"><button class="counter-btn" onclick="tally('crit_prof_6',-1)">-</button><span class="counter-display" id="crit_prof_6">0</span><button class="counter-btn" onclick="tally('crit_prof_6',1)">+</button></div>
                 </div>
                 
                 <div class="prof-entry-row">
-                    <input type="text" id="profTitle_7" placeholder="Auxiliary Field 7">
+                    <input type="text" id="profTitle_7" value="Auxiliary Field 7" class="clickable-roll-label" style="text-align:left; color:white; border:none;" readonly onclick="executeProficiencyD20Roll('profTitle_7', 'profC_7')">
                     <input type="number" id="profC_7" value="14" onchange="persistState()">
                     <input type="number" id="profM_7" value="14" onchange="persistState()">
                     <div class="counter-tool"><button class="counter-btn" onclick="tally('crit_prof_7',-1)">-</button><span class="counter-display" id="crit_prof_7">0</span><button class="counter-btn" onclick="tally('crit_prof_7',1)">+</button></div>
                 </div>
                 
                 <div class="prof-entry-row">
-                    <input type="text" id="profTitle_8" placeholder="Auxiliary Field 8">
+                    <input type="text" id="profTitle_8" value="Auxiliary Field 8" class="clickable-roll-label" style="text-align:left; color:white; border:none;" readonly onclick="executeProficiencyD20Roll('profTitle_8', 'profC_8')">
                     <input type="number" id="profC_8" value="14" onchange="persistState()">
                     <input type="number" id="profM_8" value="14" onchange="persistState()">
                     <div class="counter-tool"><button class="counter-btn" onclick="tally('crit_prof_8',-1)">-</button><span class="counter-display" id="crit_prof_8">0</span><button class="counter-btn" onclick="tally('crit_prof_8',1)">+</button></div>
                 </div>
             </div>
-            <div class="bug-fix-tag">Vessel Logic v4.0 • System Layout Cleansed</div>
+            <div class="bug-fix-tag">Vessel Logic v5.0 • System Layout Cleansed</div>
         </div>
     </div>
 
@@ -447,12 +479,12 @@
             <div class="weap-entry-row">
                 <div class="session-chk-label"><div class="session-chk" id="weapEquip_1" onclick="flipEquipCheck('weapEquip_1')"></div></div>
                 <input type="text" id="weapName_1" placeholder="Primary Armament" oninput="persistState()">
-                <input type="number" id="weapMod_1" value="0" onchange="updateCombatProficiencyValue()" style="text-align:center;">
+                <input type="number" id="weapMod_1" value="0" style="text-align:center;">
             </div>
             <div class="weap-entry-row">
                 <div class="session-chk-label"><div class="session-chk" id="weapEquip_2" onclick="flipEquipCheck('weapEquip_2')"></div></div>
                 <input type="text" id="weapName_2" placeholder="Secondary / Alternative" oninput="persistState()">
-                <input type="number" id="weapMod_2" value="0" onchange="updateCombatProficiencyValue()" style="text-align:center;">
+                <input type="number" id="weapMod_2" value="0" style="text-align:center;">
             </div>
 
             <div class="card-title" style="margin-top:14px; border-bottom:1px solid var(--border-color); padding-bottom:4px;">
@@ -496,11 +528,11 @@
     const SUPABASE_URL = "https://tovewipgxnpxvqhydveq.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvdmV3aXBneG5weHZxaHlkdmVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNDU0MzYsImV4cCI6MjA5NDkyMTQzNn0.kx0qPB8q68csr-zrv1gmoJJxzQFBnDoiDj0tzLJMJYc";
     
-    // SAFE OBJECT INSTANTIATION - USING dbClient TO AVOID CONSOLE CONFLICTS
-    if (!window.vesselDatabaseEngine) {
-        window.vesselDatabaseEngine = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // SAFE OBJECT INSTANTIATION - ZERO DUPLICATIONS ALLOWED
+    if (!window.supabaseClientInstance) {
+        window.supabaseClientInstance = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     }
-    const dbClient = window.vesselDatabaseEngine;
+    const dbClient = window.vesselDatabaseEngine = window.supabaseClientInstance;
 
     let currentUserSession = null;
     let loadedCloudVesselId = null; 
@@ -590,7 +622,7 @@
         const newName = prompt("Designate Character Vessel Name:", "Unnamed Vessel");
         if(!newName) return;
 
-        const blankBlueprint = { characterName: newName, val_str: 7, val_dex: 7, val_wil: 7 };
+        const blankBlueprint = { characterName: newName, val_str: 7, val_dex: 7, val_wil: 7, favorTokens: "0", favorGlyphs: "0" };
 
         const { data, error } = await dbClient
             .from('character_vessels')
@@ -602,6 +634,32 @@
             loadedCloudVesselId = data[0].id;
             await fetchVesselLibrary();
             switchActiveVesselToId(loadedCloudVesselId);
+        }
+    }
+
+    // CLOUD VESSEL DELETION LOGIC INJECTED
+    async function deleteActiveCloudVessel() {
+        if(!currentUserSession || !loadedCloudVesselId) { alert("No vessel targeted for sacrifice."); return; }
+        
+        const vesselSelectionDrop = document.getElementById('activeVesselDrop');
+        const vesselLabelName = vesselSelectionDrop.options[vesselSelectionDrop.selectedIndex].text;
+        
+        const verificationCheck = confirm(`Are you completely certain you want to permanently delete and sacrifice [ ${vesselLabelName} ] from the cloud database? This cannot be undone.`);
+        if(!verificationCheck) return;
+
+        isCloudLoadingInProgress = true;
+        const { error } = await dbClient
+            .from('character_vessels')
+            .delete()
+            .eq('id', loadedCloudVesselId);
+
+        if(error) {
+            alert("Deletion crashed: " + error.message);
+            isCloudLoadingInProgress = false;
+        } else {
+            alert("Vessel successfully scrubbed from cloud registry.");
+            loadedCloudVesselId = null;
+            location.reload();
         }
     }
 
@@ -650,7 +708,7 @@
                 if(node.classList.contains('session-chk')) {
                     if(cloudPayload[key]) node.classList.add('active');
                     else node.classList.remove('active');
-                } else if(node.classList.contains('counter-display') || key === 'globalSuccessCount' || key === 'critMarkersDisplay') {
+                } else if(node.classList.contains('counter-display') || key === 'globalSuccessCount' || key === 'critMarkersDisplay' || key === 'favorTokens' || key === 'favorGlyphs') {
                     node.innerText = cloudPayload[key];
                 } else {
                     node.value = cloudPayload[key];
@@ -660,7 +718,6 @@
 
         runCalculations();
         refreshTrackers();
-        updateCombatProficiencyValue();
         
         isCloudLoadingInProgress = false;
         document.getElementById('activeVesselDrop').value = vesselId;
@@ -682,6 +739,8 @@
         });
         syncPacket['globalSuccessCount'] = document.getElementById('globalSuccessCount').innerText;
         syncPacket['critMarkersDisplay'] = document.getElementById('critMarkersDisplay').innerText;
+        syncPacket['favorTokens'] = document.getElementById('favorTokens').innerText;
+        syncPacket['favorGlyphs'] = document.getElementById('favorGlyphs').innerText;
 
         for(let idx = 1; idx <= 24; idx++) {
             const nameEl = document.getElementById(`itemName_${idx}`);
@@ -700,6 +759,84 @@
             .eq('id', loadedCloudVesselId);
     }
 
+    // INTERACTIVE HARNESS: NEW SKILL MATRIX CLICK-TO-ROLL (d100) ENGINE
+    function executeSkillD100Check(skillName, skillTotalValueId, targetCheckboxId) {
+        const rawPercentText = document.getElementById(skillTotalValueId).innerText;
+        const totalSkillTarget = parseInt(rawPercentText) || 33;
+        
+        const d100Roll = Math.floor(Math.random() * 100) + 1;
+        const isSuccessful = d100Roll <= totalSkillTarget;
+        
+        let outputColor = isSuccessful ? "var(--accent-green)" : "var(--accent-blood)";
+        let resultLabel = isSuccessful ? "SUCCESS (Under Core Capability)" : "FAILURE (Over-Exertion)";
+        
+        if (isSuccessful) {
+            const checkElement = document.getElementById(targetCheckboxId);
+            if(checkElement && !checkElement.classList.contains('active')) {
+                checkElement.classList.add('active');
+            }
+        }
+        
+        document.getElementById('rollOutput').innerHTML = `
+            <span style="color:var(--text-muted); font-size:10px; text-transform:uppercase;">Skill ${skillName} Check Performed</span>
+            <div style="font-size:14px; margin:2px 0; color:${outputColor}">d100 Roll: <strong>[${d100Roll}]</strong> vs Target Max [${totalSkillTarget}%]</div>
+            <div style="font-size:11px; font-weight:bold; color:${outputColor}">${resultLabel} - End Session Checked</div>
+        `;
+        persistState();
+    }
+
+    // INTERACTIVE HARNESS: NEW PROFICIENCY MATRIX CLICK-TO-ROLL (d20) ENGINE
+    function executeProficiencyD20Roll(titleInputId, currentScoreInputId, isSelectBox = false) {
+        let titleName = "";
+        if (isSelectBox) {
+            const selectNode = document.getElementById(titleInputId);
+            titleName = selectNode.options[selectNode.selectedIndex].text;
+        } else {
+            titleName = document.getElementById(titleInputId).value || "Auxiliary Matrix";
+        }
+        
+        const currentModifierValue = parseInt(document.getElementById(currentScoreInputId).value) || 0;
+        const d20Roll = Math.floor(Math.random() * 20) + 1;
+        const grandTotalSum = d20Roll + currentModifierValue;
+        
+        let specialMessage = "";
+        if (d20Roll === 20) specialMessage = "<br><span style='color:var(--accent-green)'>🔥 CRITICAL MANIFESTATION MULTIPLIER</span>";
+        if (d20Roll === 1) specialMessage = "<br><span style='color:var(--accent-blood)'>💀 CRITICAL FAILURE DISRUPTION</span>";
+
+        document.getElementById('rollOutput').innerHTML = `
+            <span style="color:var(--text-muted); font-size:10px; text-transform:uppercase;">Proficiency Execution</span>
+            <div style="font-size:13px; margin:2px 0;"><strong>${titleName}</strong></div>
+            <div style="font-size:14px; color:var(--accent-gold);">d20 [${d20Roll}] + Mod [${currentModifierValue}] = <strong>Total ${grandTotalSum}</strong></div>
+            ${specialMessage}
+        `;
+    }
+
+    // FAVOR SYSTEM AUTOMATION CORE
+    function adjustArchonResource(resourceId, amt) {
+        const node = document.getElementById(resourceId);
+        if(!node) return;
+        let val = parseInt(node.innerText) || 0;
+        val = Math.max(0, val + amt);
+        
+        node.innerText = val;
+        
+        // Automated Glyph conversion rule logic tracking loop
+        if(resourceId === 'favorGlyphs' && val >= 3) {
+            let cyclesToConvert = Math.floor(val / 3);
+            let leftoverGlyphs = val % 3;
+            
+            node.innerText = leftoverGlyphs;
+            
+            const tokenNode = document.getElementById('favorTokens');
+            let workingTokens = parseInt(tokenNode.innerText) || 0;
+            tokenNode.innerText = workingTokens + cyclesToConvert;
+            
+            alert(`⚡ System Resonance: 3 Favor Glyphs synthesized directly into ${cyclesToConvert} Archon Favor Token!`);
+        }
+        
+        persistState();
+    }
+
     // PRE-EXISTING SYSTEMS LOGIC ENGINES
     function toggleAccordion(panelId) {
         const panel = document.getElementById(panelId);
@@ -708,7 +845,6 @@
         arrow.innerText = panel.classList.contains('open') ? '▼' : '▶';
     }
 
-    // Initialize display layout logic functions
     function rollRandomArchon() {
         const randIndex = Math.floor(Math.random() * archonRegistry.length);
         document.getElementById('archonDomain').value = archonRegistry[randIndex];
@@ -749,25 +885,6 @@
 
     function flipEquipCheck(chkId) {
         document.getElementById(chkId).classList.toggle('active');
-        updateCombatProficiencyValue();
-    }
-
-    function updateCombatProficiencyValue() {
-        const baseMaxNode = document.getElementById('profM_5');
-        const currentScoreNode = document.getElementById('profC_5');
-        if(!baseMaxNode || !currentScoreNode) return;
-        
-        let baseMaxVal = parseInt(baseMaxNode.value) || 0;
-        let runningModifierSum = 0;
-
-        if (document.getElementById('weapEquip_1') && document.getElementById('weapEquip_1').classList.contains('active')) {
-            runningModifierSum += parseInt(document.getElementById('weapMod_1').value) || 0;
-        }
-        if (document.getElementById('weapEquip_2') && document.getElementById('weapEquip_2').classList.contains('active')) {
-            runningModifierSum += parseInt(document.getElementById('weapMod_2').value) || 0;
-        }
-
-        currentScoreNode.value = baseMaxVal + runningModifierSum;
         persistState();
     }
 
