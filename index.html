@@ -173,31 +173,13 @@
     
     <header>
         <div class="header-column-left">
-            <div class="header-field">
-                <label>Character Name</label>
-                <input type="text" id="characterName" oninput="persistState()">
-            </div>
-            <div class="header-field">
-                <label>Background</label>
-                <input type="text" id="characterBackground" oninput="persistState()">
-            </div>
-            <div class="header-field">
-                <label>Marked Archon <button class="random-btn" onclick="rollRandomArchon()">Roll</button></label>
-                <input type="text" id="archonDomain" placeholder="Click roll or write..." oninput="persistState()">
-            </div>
-            <div class="header-field">
-                <label>RMC Balance</label>
-                <input type="number" id="rmcBalance" value="0" oninput="persistState()">
-            </div>
-            <div class="header-field">
-    <label>Corruption</label>
-    <input type="number" id="corruptionVal" value="0" oninput="persistState()">
+    <div class="header-field"><label>Character Name</label><input type="text" id="characterName" oninput="persistState()"></div>
+    <div class="header-field"><label>Background</label><input type="text" id="characterBackground" oninput="persistState()"></div>
+    <div class="header-field"><label>Marked Archon <button class="random-btn" onclick="rollRandomArchon()">Roll</button></label><input type="text" id="archonDomain" oninput="persistState()"></div>
+    <div class="header-field"><label>RMC Balance</label><input type="number" id="rmcBalance" oninput="persistState()"></div>
+    <div class="header-field"><label>Advancement (AP)</label><input type="number" id="advancementPoints" oninput="persistState()"></div>
+    <div class="header-field"><label>Corruption Index</label><input type="number" id="corruptionVal" value="0" oninput="persistState()"></div>
 </div>
-            <div class="header-field">
-                <label style="color:var(--accent-gold)">Advancement (AP)</label>
-                <input type="number" id="advancementPoints" value="3" min="0" max="57" onchange="validateAPRange()">
-            </div>
-        </div>
 
         <div class="header-column-right">
             <div class="header-field" style="align-items:center; flex: 1;">
@@ -311,11 +293,8 @@
     </div>
 
     <div class="col-center">
-      <div class="card">
-    <div class="card-title">Flux Nexus (Manual)</div>
-          <label>Taint Accumulation</label>
-<input type="number" id="taintCur" value="0" onchange="persistState()" style="width:100%; background:#000; border:1px solid var(--border-color); color:white; padding:5px;">
-<button class="auth-btn" style="background:var(--accent-taint); margin-top:10px; width:100%;" onclick="convertTaintToCorruption()">Purge Taint to Corruption</button>
+        <div class="card">
+    <div class="card-title">Flux Nexus (Manual Purge)</div>
     <div class="tracker-layout">
         <div class="tracker-node">
             <div class="tracker-header-labels"><span>RM (Magical Essence)</span><span id="rmTxt">120 / 120</span></div>
@@ -328,7 +307,7 @@
         <div class="tracker-node" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
             <div class="tracker-header-labels"><span>Taint</span><span id="taintTxt">0</span></div>
             <input type="number" id="taintCur" value="0" onchange="refreshTrackers()">
-            <button class="auth-btn" style="background:var(--accent-taint); margin-top:5px;" onclick="convertTaintToCorruption()">Purge Taint to Corruption</button>
+            <button class="auth-btn" style="background:var(--accent-taint); margin-top:5px; width:100%;" onclick="convertTaintToCorruption()">Purge Taint to Corruption</button>
         </div>
     </div>
 </div>
@@ -1029,38 +1008,25 @@
         const rMax = parseInt(document.getElementById('rmMax').value) || 120;
         document.getElementById('rmTxt').innerText = `${rCur} / ${rMax}`;
         document.getElementById('rmMeter').style.width = Math.min(Math.max((rCur / rMax) * 100, 0), 100) + '%';
-        
-        document.getElementById('taintTxt').innerText = document.getElementById('taintCur').value;
-        persistState();
-    }
 
-    function convertTaintToCorruption() {
-        let t = parseInt(document.getElementById('taintCur').value) || 0;
-        let c = parseInt(document.getElementById('corruptionVal').value) || 0;
+        // Taint calculation rules conversion processing
+        const tCur = parseInt(document.getElementById('taintCur').value) || 0;
         
-        if (t > 0) {
-            // Math: (Taint / 100) * 35
-            let addedCorruption = Math.floor((t / 100) * 35);
-            document.getElementById('corruptionVal').value = c + addedCorruption;
-            document.getElementById('taintCur').value = 0; // Reset Taint
-            
-            alert("Taint Purged. Corruption Index increased by " + addedCorruption);
-            refreshTrackers();
-            persistState();
-        }
-        function convertTaintToCorruption() {
-    let t = parseInt(document.getElementById('taintCur').value) || 0;
-    let c = parseInt(document.getElementById('corruptionVal').value) || 0;
-    if (t >= 100) {
-        let added = Math.floor((t / 100) * 35);
-        document.getElementById('corruptionVal').value = c + added;
-        document.getElementById('taintCur').value = t % 100;
-        alert("Purge successful: " + added + " Corruption added.");
+        // Calculate conversion points (100 Taint = 35% Corruption Index)
+        const computedCorruptionFactor = Math.floor(tCur / 100) * 35;
+        const visualSubProgressPercent = tCur % 100;
+        
+        document.getElementById('taintTxt').innerText = `${tCur} Points Accumulated`;
+        document.getElementById('taintMeter').style.width = visualSubProgressPercent + '%';
+
+        document.getElementById('corruptionTxt').innerText = `${computedCorruptionFactor}%`;
+        document.getElementById('corruptionMeter').style.width = Math.min(computedCorruptionFactor, 100) + '%';
+
+        const vCur = parseInt(document.getElementById('veilCur').value) || 0;
+        document.getElementById('veilTxt').innerText = `${vCur} / 100`;
+        document.getElementById('veilMeter').style.width = Math.min(Math.max((vCur / 100) * 100, 0), 100) + '%';
+
         persistState();
-    } else { 
-        alert("Minimum 100 Taint required to purge."); 
-    }
-}
     }
 
     function triggerSigilRoll(sigilLabel, attrFieldId, tokenElementId) {
@@ -1138,6 +1104,22 @@
             <div style="font-size:14px; color:${visualHexColor}; margin-top:2px; font-weight:bold;">[Roll ${oracleDieResult}] — ${abstractJudgment}</div>
         `;
     }
+function convertTaintToCorruption() {
+    let t = parseInt(document.getElementById('taintCur').value) || 0;
+    let c = parseInt(document.getElementById('corruptionVal').value) || 0;
+    
+    if (t >= 100) {
+        let addedCorruption = Math.floor((t / 100) * 35);
+        document.getElementById('corruptionVal').value = c + addedCorruption;
+        document.getElementById('taintCur').value = t % 100; // Keeps remainder
+        
+        alert("Purge successful: " + addedCorruption + " Corruption added.");
+        refreshTrackers();
+        persistState();
+    } else { 
+        alert("Minimum 100 Taint required to purge."); 
+    }
+}
 </script>
 
 </body>
