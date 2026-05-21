@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blood of the World - Cloud Protocol v5.0</title>
+    <title>Blood of the World - Cloud Protocol v5.1</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -37,13 +37,13 @@
         .container { max-width: 1350px; margin: 0 auto; display: grid; grid-template-columns: repeat(12, 1fr); gap: 15px; opacity: 0.4; pointer-events: none; transition: opacity 0.3s ease; }
         .container.unlocked { opacity: 1; pointer-events: auto; }
         
-        /* Header Region */
+        /* Header Region Restructured for Equal Balance */
         header { grid-column: span 12; background: var(--panel-bg); border: 1px solid var(--border-color); padding: 15px; border-radius: 6px; display: grid; grid-template-columns: repeat(12, 1fr); gap: 15px; border-left: 5px solid var(--accent-blood); }
-        .header-column-left { grid-column: span 7; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; }
-        .header-column-right { grid-column: span 5; background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border-color); border-radius: 4px; padding: 10px; display: flex; gap: 15px; align-items: center; justify-content: space-around; }
+        .header-column-left { grid-column: span 8; display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px; }
+        .header-column-right { grid-column: span 4; background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border-color); border-radius: 4px; padding: 8px 12px; display: flex; gap: 12px; align-items: center; justify-content: space-between; }
         .header-field { display: flex; flex-direction: column; justify-content: center; width: 100%; }
         .header-field label { font-size: 10px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 4px; font-weight: bold; }
-        .header-field input, .header-field select { background: rgba(0,0,0,0.4); border: 1px solid var(--border-color); color: white; padding: 6px 10px; border-radius: 4px; font-size: 13px; }
+        .header-field input, .header-field select { background: rgba(0,0,0,0.4); border: 1px solid var(--border-color); color: white; padding: 6px 10px; border-radius: 4px; font-size: 13px; width: 100%; }
         
         /* Columns Layout */
         .col-left { grid-column: span 5; display: flex; flex-direction: column; gap: 15px; }
@@ -198,23 +198,23 @@
         </div>
 
         <div class="header-column-right">
-            <div class="header-field" style="align-items:center;">
-                <label style="color:var(--accent-gold); font-weight:bold; margin-bottom:6px;">Archon Favor Tokens</label>
-                <div class="counter-tool" style="padding:6px 12px; background:#000;">
-                    <button class="counter-btn" style="width:22px; height:22px; font-size:14px;" onclick="adjustArchonResource('favorTokens', -1)">-</button>
-                    <span class="counter-display" id="favorTokens" style="font-size:16px; min-width:24px; color:var(--accent-gold)">0</span>
-                    <button class="counter-btn" style="width:22px; height:22px; font-size:14px;" onclick="adjustArchonResource('favorTokens', 1)">+</button>
+            <div class="header-field" style="align-items:center; flex: 1;">
+                <label style="color:var(--accent-gold); font-size:9px; text-align:center;">Favor Tokens</label>
+                <div class="counter-tool" style="margin-top:2px;">
+                    <button class="counter-btn" onclick="adjustArchonResource('favorTokens', -1)">-</button>
+                    <span class="counter-display" id="favorTokens" style="color:var(--accent-gold)">0</span>
+                    <button class="counter-btn" onclick="adjustArchonResource('favorTokens', 1)">+</button>
                 </div>
             </div>
-            <div class="header-field" style="align-items:center;">
-                <label style="color:var(--text-muted); margin-bottom:6px;">Favor Glyphs (3 Max)</label>
-                <div class="counter-tool" style="padding:6px 12px; background:#000;">
-                    <button class="counter-btn" style="width:22px; height:22px; font-size:14px;" onclick="adjustArchonResource('favorGlyphs', -1)">-</button>
-                    <span class="counter-display" id="favorGlyphs" style="font-size:16px; min-width:24px;">0</span>
-                    <button class="counter-btn" style="width:22px; height:22px; font-size:14px;" onclick="adjustArchonResource('favorGlyphs', 1)">+</button>
+            <div class="header-field" style="align-items:center; flex: 1;">
+                <label style="color:var(--text-muted); font-size:9px; text-align:center;">Favor Glyphs</label>
+                <div class="counter-tool" style="margin-top:2px;">
+                    <button class="counter-btn" onclick="adjustArchonResource('favorGlyphs', -1)">-</button>
+                    <span class="counter-display" id="favorGlyphs">0</span>
+                    <button class="counter-btn" onclick="adjustArchonResource('favorGlyphs', 1)">+</button>
                 </div>
-                <span style="font-size:9px; color:var(--text-muted); margin-top:4px;">3 Glyphs ➔ 1 Token</span>
             </div>
+            <button id="synthBtn" class="auth-btn" style="display:none; background:var(--accent-gold); color:black; font-size:9px; padding:4px 6px; font-weight:bold; height:24px; align-self:center;" onclick="synthesizeGlyphsToToken()">Synthesize (Spends 3)</button>
         </div>
     </header>
 
@@ -360,7 +360,7 @@
         <div class="card">
             <div class="card-title">Proficiencies &amp; Pools <span>Click Name to Roll d20 + Modifier</span></div>
             <p style="font-size:10px; color:var(--text-muted); margin-bottom:8px; font-style:italic;">
-                Main Base Score: 2d6+12 | Others: 2d6+7. Current value fields can be completely customized.
+                Main Base Score: 2d6+12 | Others: 2d6+7. Custom baselines calculation enabled on slot 5.
             </p>
             
             <div class="prof-entry-row" style="font-weight:bold; font-size:10px; color:var(--text-muted); background:none; padding:0; margin-bottom:4px;">
@@ -399,8 +399,8 @@
                         <option value="Heavy Blow">Heavy Blow (Combat)</option>
                         <option value="Disturb Hit">Disturb Hit (Combat)</option>
                     </select>
-                    <input type="number" id="profC_5" value="14" onchange="persistState()" style="color:var(--accent-gold); font-weight:bold; background:#000;" title="Manually alter current score baseline">
-                    <input type="number" id="profM_5" value="14" onchange="persistState()">
+                    <input type="number" id="profC_5" value="14" onchange="persistState()" style="color:var(--accent-gold); font-weight:bold; background:#000;" title="Responsive calculation with active modifiers inside your configuration grid">
+                    <input type="number" id="profM_5" value="14" onchange="updateCombatProficiencyValue()">
                     <div class="counter-tool"><button class="counter-btn" onclick="tally('crit_prof_5',-1)">-</button><span class="counter-display" id="crit_prof_5">0</span><button class="counter-btn" onclick="tally('crit_prof_5',1)">+</button></div>
                 </div>
                 
@@ -425,7 +425,7 @@
                     <div class="counter-tool"><button class="counter-btn" onclick="tally('crit_prof_8',-1)">-</button><span class="counter-display" id="crit_prof_8">0</span><button class="counter-btn" onclick="tally('crit_prof_8',1)">+</button></div>
                 </div>
             </div>
-            <div class="bug-fix-tag">Vessel Logic v5.0 • System Layout Cleansed</div>
+            <div class="bug-fix-tag">Vessel Logic v5.1 • Fluid System Mechanics Installed</div>
         </div>
     </div>
 
@@ -479,12 +479,12 @@
             <div class="weap-entry-row">
                 <div class="session-chk-label"><div class="session-chk" id="weapEquip_1" onclick="flipEquipCheck('weapEquip_1')"></div></div>
                 <input type="text" id="weapName_1" placeholder="Primary Armament" oninput="persistState()">
-                <input type="number" id="weapMod_1" value="0" style="text-align:center;">
+                <input type="number" id="weapMod_1" value="0" onchange="updateCombatProficiencyValue()" style="text-align:center;">
             </div>
             <div class="weap-entry-row">
                 <div class="session-chk-label"><div class="session-chk" id="weapEquip_2" onclick="flipEquipCheck('weapEquip_2')"></div></div>
                 <input type="text" id="weapName_2" placeholder="Secondary / Alternative" oninput="persistState()">
-                <input type="number" id="weapMod_2" value="0" style="text-align:center;">
+                <input type="number" id="weapMod_2" value="0" onchange="updateCombatProficiencyValue()" style="text-align:center;">
             </div>
 
             <div class="card-title" style="margin-top:14px; border-bottom:1px solid var(--border-color); padding-bottom:4px;">
@@ -637,7 +637,6 @@
         }
     }
 
-    // CLOUD VESSEL DELETION LOGIC INJECTED
     async function deleteActiveCloudVessel() {
         if(!currentUserSession || !loadedCloudVesselId) { alert("No vessel targeted for sacrifice."); return; }
         
@@ -718,6 +717,7 @@
 
         runCalculations();
         refreshTrackers();
+        updateSynthButtonVisibility();
         
         isCloudLoadingInProgress = false;
         document.getElementById('activeVesselDrop').value = vesselId;
@@ -759,7 +759,7 @@
             .eq('id', loadedCloudVesselId);
     }
 
-    // INTERACTIVE HARNESS: NEW SKILL MATRIX CLICK-TO-ROLL (d100) ENGINE
+    // INTERACTIVE HARNESS: SKILL MATRIX CLICK-TO-ROLL (d100) ENGINE
     function executeSkillD100Check(skillName, skillTotalValueId, targetCheckboxId) {
         const rawPercentText = document.getElementById(skillTotalValueId).innerText;
         const totalSkillTarget = parseInt(rawPercentText) || 33;
@@ -785,7 +785,7 @@
         persistState();
     }
 
-    // INTERACTIVE HARNESS: NEW PROFICIENCY MATRIX CLICK-TO-ROLL (d20) ENGINE
+    // INTERACTIVE HARNESS: PROFICIENCY MATRIX CLICK-TO-ROLL (d20) ENGINE
     function executeProficiencyD20Roll(titleInputId, currentScoreInputId, isSelectBox = false) {
         let titleName = "";
         if (isSelectBox) {
@@ -811,30 +811,39 @@
         `;
     }
 
-    // FAVOR SYSTEM AUTOMATION CORE
+    // MANUALLY TRIPPED RESOURCE HOARD SYNTHESIS CORE
     function adjustArchonResource(resourceId, amt) {
         const node = document.getElementById(resourceId);
         if(!node) return;
         let val = parseInt(node.innerText) || 0;
         val = Math.max(0, val + amt);
-        
         node.innerText = val;
         
-        // Automated Glyph conversion rule logic tracking loop
-        if(resourceId === 'favorGlyphs' && val >= 3) {
-            let cyclesToConvert = Math.floor(val / 3);
-            let leftoverGlyphs = val % 3;
-            
-            node.innerText = leftoverGlyphs;
-            
-            const tokenNode = document.getElementById('favorTokens');
-            let workingTokens = parseInt(tokenNode.innerText) || 0;
-            tokenNode.innerText = workingTokens + cyclesToConvert;
-            
-            alert(`⚡ System Resonance: 3 Favor Glyphs synthesized directly into ${cyclesToConvert} Archon Favor Token!`);
-        }
-        
+        updateSynthButtonVisibility();
         persistState();
+    }
+
+    function updateSynthButtonVisibility() {
+        const currentGlyphs = parseInt(document.getElementById('favorGlyphs').innerText) || 0;
+        const synthButton = document.getElementById('synthBtn');
+        if (synthButton) {
+            synthButton.style.display = currentGlyphs >= 3 ? "inline-block" : "none";
+        }
+    }
+
+    function synthesizeGlyphsToToken() {
+        const glyphNode = document.getElementById('favorGlyphs');
+        const tokenNode = document.getElementById('favorTokens');
+        
+        let glyphValue = parseInt(glyphNode.innerText) || 0;
+        let tokenValue = parseInt(tokenNode.innerText) || 0;
+        
+        if (glyphValue >= 3) {
+            glyphNode.innerText = glyphValue - 3;
+            tokenNode.innerText = tokenValue + 1;
+            updateSynthButtonVisibility();
+            persistState();
+        }
     }
 
     // PRE-EXISTING SYSTEMS LOGIC ENGINES
@@ -885,6 +894,26 @@
 
     function flipEquipCheck(chkId) {
         document.getElementById(chkId).classList.toggle('active');
+        updateCombatProficiencyValue();
+    }
+
+    // RE-INTEGRATED LISTENING ALGORITHM WITHIN FREE INPUT ARCHITECTURE
+    function updateCombatProficiencyValue() {
+        const baseMaxNode = document.getElementById('profM_5');
+        const currentScoreNode = document.getElementById('profC_5');
+        if(!baseMaxNode || !currentScoreNode) return;
+        
+        let baseMaxVal = parseInt(baseMaxNode.value) || 0;
+        let runningModifierSum = 0;
+
+        if (document.getElementById('weapEquip_1') && document.getElementById('weapEquip_1').classList.contains('active')) {
+            runningModifierSum += parseInt(document.getElementById('weapMod_1').value) || 0;
+        }
+        if (document.getElementById('weapEquip_2') && document.getElementById('weapEquip_2').classList.contains('active')) {
+            runningModifierSum += parseInt(document.getElementById('weapMod_2').value) || 0;
+        }
+
+        currentScoreNode.value = baseMaxVal + runningModifierSum;
         persistState();
     }
 
@@ -933,6 +962,7 @@
         }
     }
 
+    // UPDATED SLOTS ENGINE BOUND TO NEW HEADERS PROFILES
     function reconstructInventorySlots() {
         const forceVal = parseInt(document.getElementById('val_str').value) || 2;
         const speedVal = parseInt(document.getElementById('val_dex').value) || 2;
