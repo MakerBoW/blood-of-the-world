@@ -496,7 +496,7 @@
     const SUPABASE_URL = "https://tovewipgxnpxvqhydveq.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvdmV3aXBneG5weHZxaHlkdmVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNDU0MzYsImV4cCI6MjA5NDkyMTQzNn0.kx0qPB8q68csr-zrv1gmoJJxzQFBnDoiDj0tzLJMJYc";
     
-    // SAFE SCOPE VARIABLE CHECK TO AVOID RE-DECLARATION CONSOLE HALTS
+    // EXPLICIT SAFE OBJECT INSTANTIATION - ZERO DUPLICATIONS ALLOWED
     if (!window.supabaseClientInstance) {
         window.supabaseClientInstance = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     }
@@ -708,6 +708,7 @@
         arrow.innerText = panel.classList.contains('open') ? '▼' : '▶';
     }
 
+    // Initialize display layout logic functions
     function rollRandomArchon() {
         const randIndex = Math.floor(Math.random() * archonRegistry.length);
         document.getElementById('archonDomain').value = archonRegistry[randIndex];
