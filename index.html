@@ -306,8 +306,8 @@
         </div>
         <div class="tracker-node" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
             <div class="tracker-header-labels"><span>Taint</span><span id="taintTxt">0</span></div>
-            <input type="number" id="taintCur" value="0" onchange="refreshTrackers()">
-            <button class="auth-btn" style="background:var(--accent-taint); margin-top:5px; width:100%;" onclick="convertTaintToCorruption()">Purge Taint to Corruption</button>
+            <input type="number" id="taintCur" value="0" onchange="refreshTrackers()" style="width:100%; background:#000; color:white; border:1px solid var(--border-color); padding:5px;">
+<button class="auth-btn" style="background:var(--accent-taint); margin-top:10px; width:100%;" onclick="convertTaintToCorruption()">Purge Taint to Corruption</button>
         </div>
     </div>
 </div>
@@ -1109,13 +1109,13 @@ function convertTaintToCorruption() {
     let c = parseInt(document.getElementById('corruptionVal').value) || 0;
     
     if (t >= 100) {
-        let addedCorruption = Math.floor((t / 100) * 35);
-        document.getElementById('corruptionVal').value = c + addedCorruption;
-        document.getElementById('taintCur').value = t % 100; // Keeps remainder
+        // 100 Taint = 35 Corruption
+        let added = Math.floor((t / 100) * 35);
+        document.getElementById('corruptionVal').value = c + added;
+        document.getElementById('taintCur').value = t % 100;
         
-        alert("Purge successful: " + addedCorruption + " Corruption added.");
-        refreshTrackers();
-        persistState();
+        alert("Purge successful: " + added + " Corruption added.");
+        persistState(); // This saves it to your cloud
     } else { 
         alert("Minimum 100 Taint required to purge."); 
     }
