@@ -173,13 +173,27 @@
     
     <header>
         <div class="header-column-left">
-    <div class="header-field"><label>Character Name</label><input type="text" id="characterName" oninput="persistState()"></div>
-    <div class="header-field"><label>Background</label><input type="text" id="characterBackground" oninput="persistState()"></div>
-    <div class="header-field"><label>Marked Archon <button class="random-btn" onclick="rollRandomArchon()">Roll</button></label><input type="text" id="archonDomain" oninput="persistState()"></div>
-    <div class="header-field"><label>RMC Balance</label><input type="number" id="rmcBalance" oninput="persistState()"></div>
-    <div class="header-field"><label>Advancement (AP)</label><input type="number" id="advancementPoints" oninput="persistState()"></div>
-    <div class="header-field"><label>Corruption Index</label><input type="number" id="corruptionVal" value="0" oninput="persistState()"></div>
-</div>
+            <div class="header-field">
+                <label>Character Name</label>
+                <input type="text" id="characterName" oninput="persistState()">
+            </div>
+            <div class="header-field">
+                <label>Background</label>
+                <input type="text" id="characterBackground" oninput="persistState()">
+            </div>
+            <div class="header-field">
+                <label>Marked Archon <button class="random-btn" onclick="rollRandomArchon()">Roll</button></label>
+                <input type="text" id="archonDomain" placeholder="Click roll or write..." oninput="persistState()">
+            </div>
+            <div class="header-field">
+                <label>RMC Balance</label>
+                <input type="number" id="rmcBalance" value="0" oninput="persistState()">
+            </div>
+            <div class="header-field">
+                <label style="color:var(--accent-gold)">Advancement (AP)</label>
+                <input type="number" id="advancementPoints" value="3" min="0" max="57" onchange="validateAPRange()">
+            </div>
+        </div>
 
         <div class="header-column-right">
             <div class="header-field" style="align-items:center; flex: 1;">
@@ -294,23 +308,20 @@
 
     <div class="col-center">
         <div class="card">
-    <div class="card-title">Flux Nexus (Manual Purge)</div>
-    <div class="tracker-layout">
-        <div class="tracker-node">
-            <div class="tracker-header-labels"><span>RM (Magical Essence)</span><span id="rmTxt">120 / 120</span></div>
-            <div class="meter-container"><div id="rmMeter" class="meter-fill fill-rm" style="width: 100%;"></div></div>
-            <div class="tracker-control-row">
-                <input type="number" id="rmCur" value="120" onchange="refreshTrackers()">
-                <span>/</span><input type="number" id="rmMax" value="120" onchange="refreshTrackers()">
-            </div>
-        </div>
-        <div class="tracker-node" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
-            <div class="tracker-header-labels"><span>Taint</span><span id="taintTxt">0</span></div>
-            <input type="number" id="taintCur" value="0" onchange="refreshTrackers()" style="width:100%; background:#000; color:white; border:1px solid var(--border-color); padding:5px;">
-<button class="auth-btn" style="background:var(--accent-taint); margin-top:10px; width:100%;" onclick="convertTaintToCorruption()">Purge Taint to Corruption</button>
-        </div>
-    </div>
-</div>
+            <div class="card-title">Resonance &amp; Environmental Flux</div>
+            <div class="tracker-layout">
+                <div class="tracker-node">
+                    <div class="tracker-header-labels">
+                        <span>RM (Magical Essence)</span>
+                        <span id="rmTxt">120 / 120</span>
+                    </div>
+                    <div class="meter-container"><div id="rmMeter" class="meter-fill fill-rm" style="width: 100%;"></div></div>
+                    <div class="tracker-control-row">
+                        <input type="number" id="rmCur" value="120" onchange="refreshTrackers()">
+                        <span>/</span>
+                        <input type="number" id="rmMax" value="120" onchange="refreshTrackers()">
+                    </div>
+                </div>
 
                 <div class="tracker-node" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
                     <div class="tracker-header-labels">
@@ -1104,22 +1115,6 @@
             <div style="font-size:14px; color:${visualHexColor}; margin-top:2px; font-weight:bold;">[Roll ${oracleDieResult}] — ${abstractJudgment}</div>
         `;
     }
-function convertTaintToCorruption() {
-    let t = parseInt(document.getElementById('taintCur').value) || 0;
-    let c = parseInt(document.getElementById('corruptionVal').value) || 0;
-    
-    if (t >= 100) {
-        // 100 Taint = 35 Corruption
-        let added = Math.floor((t / 100) * 35);
-        document.getElementById('corruptionVal').value = c + added;
-        document.getElementById('taintCur').value = t % 100;
-        
-        alert("Purge successful: " + added + " Corruption added.");
-        persistState(); // This saves it to your cloud
-    } else { 
-        alert("Minimum 100 Taint required to purge."); 
-    }
-}
 </script>
 
 </body>
