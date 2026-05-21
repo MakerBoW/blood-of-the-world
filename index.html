@@ -954,8 +954,8 @@
 
             const remainingBalance = parsedVal - currentAllocPoints;
             const targetTrackerLabel = document.getElementById(`pool_${nodeKey}`);
-            targetTrackerLabel.innerText = `Points Available: ${remainingBalance}`;
-            targetTrackerLabel.style.color = remainingBalance < 0 ? 'var(--accent-blood)' : 'var(--text-muted)';
+            targetTrackerLabel.innerText = `Points Invested: ${currentAllocPoints}`;
+            targetTrackerLabel.style.color = 'var(--text-muted)';
         });
 
         reconstructInventorySlots();
