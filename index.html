@@ -182,7 +182,7 @@
                 <input type="text" id="characterBackground" oninput="persistState()">
             </div>
             <div class="header-field">
-                <label>Marked Archon <button class="random-btn" onclick="rollRandomArchon()">Roll</button></label>
+                <label>Archon<button class="random-btn" onclick="rollRandomArchon()">Roll</button></label>
                 <input type="text" id="archonDomain" placeholder="Click roll or write..." oninput="persistState()">
             </div>
             <div class="header-field">
@@ -338,6 +338,7 @@
                             <button class="counter-btn" onclick="tally('cleanseDays',1)">+</button>
                         </div>
                     </div>
+                    <button class="auth-btn" style="background:var(--accent-taint); margin-top:8px; width:100%; cursor:pointer;" onclick="convertTaintToCorruption()">Purge Taint to Corruption</button>
                 </div>
 
                 <div class="tracker-node" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
@@ -1115,6 +1116,22 @@
             <div style="font-size:14px; color:${visualHexColor}; margin-top:2px; font-weight:bold;">[Roll ${oracleDieResult}] — ${abstractJudgment}</div>
         `;
     }
+function convertTaintToCorruption() {
+    let t = parseInt(document.getElementById('taintCur').value) || 0;
+    let c = parseInt(document.getElementById('corruptionVal').value) || 0;
+    
+    if (t > 0) {
+        // Math: (Taint / 100) * 35
+        let addedCorruption = Math.floor((t / 100) * 35);
+        document.getElementById('corruptionVal').value = c + addedCorruption;
+        document.getElementById('taintCur').value = 0; // Clears the Taint input
+        
+        alert("Purged " + t + " Taint. Added " + addedCorruption + " Corruption.");
+        persistState(); // Saves the new values to your database
+    } else { 
+        alert("No Taint to purge."); 
+    }
+}
 </script>
 
 </body>
