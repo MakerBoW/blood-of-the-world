@@ -496,11 +496,11 @@
     const SUPABASE_URL = "https://tovewipgxnpxvqhydveq.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvdmV3aXBneG5weHZxaHlkdmVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNDU0MzYsImV4cCI6MjA5NDkyMTQzNn0.kx0qPB8q68csr-zrv1gmoJJxzQFBnDoiDj0tzLJMJYc";
     
-    // EXPLICIT SAFE OBJECT INSTANTIATION - ZERO DUPLICATIONS ALLOWED
-    if (!window.supabaseClientInstance) {
-        window.supabaseClientInstance = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // SAFE OBJECT INSTANTIATION - USING dbClient TO AVOID CONSOLE CONFLICTS
+    if (!window.vesselDatabaseEngine) {
+        window.vesselDatabaseEngine = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     }
-    const supabase = window.supabaseClientInstance;
+    const dbClient = window.vesselDatabaseEngine;
 
     let currentUserSession = null;
     let loadedCloudVesselId = null; 
@@ -525,7 +525,7 @@
         const password = document.getElementById('authPassword').value;
         if(!email || !password) { alert("Input accurate system entry details."); return; }
         
-        const { data, error } = await supabase.auth.signUp({ email, password });
+        const { data, error } = await dbClient.auth.signUp({ email, password });
         if(error) { alert("Registration exception: " + error.message); }
         else { alert("Vessel account created! Please sign in."); }
     }
@@ -535,17 +535,17 @@
         const password = document.getElementById('authPassword').value;
         if(!email || !password) { alert("Input registration details."); return; }
 
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await dbClient.auth.signInWithPassword({ email, password });
         if(error) { alert("Sign In failure: " + error.message); }
     }
 
     async function handleLogout() {
-        await supabase.auth.signOut();
+        await dbClient.auth.signOut();
         location.reload();
     }
 
     // Connect into the Supabase Session Stream
-    supabase.auth.onAuthStateChange((event, session) => {
+    dbClient.auth.onAuthStateChange((event, session) => {
         currentUserSession = session;
         const outPanel = document.getElementById('loggedOutZone');
         const inPanel = document.getElementById('loggedInZone');
@@ -567,7 +567,7 @@
 
     async function fetchVesselLibrary() {
         if(!currentUserSession) return;
-        const { data, error } = await supabase
+        const { data, error } = await dbClient
             .from('character_vessels')
             .select('id, character_name')
             .order('updated_at', { ascending: false });
@@ -592,7 +592,7 @@
 
         const blankBlueprint = { characterName: newName, val_str: 7, val_dex: 7, val_wil: 7 };
 
-        const { data, error } = await supabase
+        const { data, error } = await dbClient
             .from('character_vessels')
             .insert([{ character_name: newName, sheet_data: blankBlueprint, user_id: currentUserSession.user.id }])
             .select();
@@ -615,7 +615,7 @@
         isCloudLoadingInProgress = true;
         loadedCloudVesselId = vesselId;
 
-        const { data, error } = await supabase
+        const { data, error } = await dbClient
             .from('character_vessels')
             .select('*')
             .eq('id', vesselId)
@@ -694,7 +694,7 @@
         const currentNameInput = document.getElementById('characterName').value || 'Unnamed Vessel';
 
         // Direct async cloud push execution
-        await supabase
+        await dbClient
             .from('character_vessels')
             .update({ character_name: currentNameInput, sheet_data: syncPacket, updated_at: new Date() })
             .eq('id', loadedCloudVesselId);
