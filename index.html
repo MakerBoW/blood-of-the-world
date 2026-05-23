@@ -163,13 +163,17 @@
         <select id="activeVesselDrop" class="vessel-selector" onchange="switchActiveVessel()">
             <option value="">-- Summon Assigned Vessel --</option>
         </select>
+
+        <button class="auth-btn" id="toggleSheetBtn" style="background:var(--accent-blood); display:none;" onclick="switchInterfaceView('sheet')">Vessel Core</button>
+        <button class="auth-btn" id="toggleCalBtn" style="background:#1e1e24; display:none;" onclick="switchInterfaceView('calendar')">Temporal Horizon</button>
+
         <button class="auth-btn primary" onclick="createNewVesselInCloud()">+ Brand New Vessel</button>
         <button class="auth-btn" style="background:#bf2121; font-weight:bold;" onclick="deleteActiveCloudVessel()">Sacrifice Vessel (Delete)</button>
         <button class="auth-btn" style="background:#444452" onclick="handleLogout()">Disconnect</button>
     </div>
 </div>
 
-<div class="container" id="sheetContainer">
+<div class="container" id="sheetContainer" style="display:none;">
     
     <header>
         <div class="header-column-left">
@@ -213,6 +217,11 @@
                 </div>
             </div>
             <button id="synthBtn" class="auth-btn" style="display:none; background:var(--accent-gold); color:black; font-size:9px; padding:4px 6px; font-weight:bold; height:24px; align-self:center;" onclick="synthesizeGlyphsToToken()">Synthesize (Spends 3)</button>
+            
+            <div class="header-field" style="align-items:center; border-left:1px solid var(--border-color); padding-left:10px; margin-left:5px; min-width:90px;">
+                <label style="color:var(--accent-blood); font-size:9px; text-transform:uppercase;">Time Tracker</label>
+                <span id="sheetHeaderDateBadge" style="font-weight:bold; font-size:11px; color:var(--accent-gold); cursor:pointer; text-align:center; margin-top:2px;" onclick="switchInterfaceView('calendar')">Awaiting Data...</span>
+            </div>
         </div>
     </header>
 
@@ -234,13 +243,13 @@
                 <span style="font-size:9px; color:var(--text-muted); font-weight:normal; margin-left:auto;">(1 Marker per 8 Successes)</span>
             </div>
         </div>
-		<div class="marker-box" style="margin-top:8px; border-top:1px solid rgba(255,255,255,0.1); padding-top:6px;">
-		    <span>GRIT (Reroll Available):</span>
-		    <div class="session-chk-label" style="margin-left:auto;">
-		        <div class="session-chk" id="gritStatus" onclick="flipSessionCheck('gritStatus')"></div>
-		    </div>
-		</div>
-        <div class="card">
+        <div class="marker-box" style="margin-top:8px; border-top:1px solid rgba(255,255,255,0.1); padding-top:6px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 4px; display: flex; align-items: center;">
+            <span style="font-weight: bold; color: var(--accent-gold);">GRIT (Reroll Available):</span>
+            <div class="session-chk-label" style="margin-left:auto;">
+                <div class="session-chk" id="gritStatus" onclick="flipSessionCheck('gritStatus')"></div>
+            </div>
+        </div>
+        <div class="card" style="margin-top: 15px;">
             <div class="card-title">Core Attributes &amp; Skill Matrices <span>Click Label to Roll d100 under Value</span></div>
             
             <div class="attr-wrapper str">
@@ -262,7 +271,7 @@
                 <div class="skill-item-row">
                     <span class="clickable-roll-label" onclick="executeSkillD100Check('Grip', 'total_grip', 'chk_grip')">Grip</span><span id="base_grip">33%</span><input type="number" id="alloc_grip" value="0" onchange="runCalculations()"><span id="total_grip" class="skill-total-val">33%</span><div class="counter-tool"><button class="counter-btn" onclick="tally('crit_sk_grp',-1)">-</button><span class="counter-display" id="crit_sk_grp">0</span><button class="counter-btn" onclick="tally('crit_sk_grp',1)">+</button></div><div class="session-chk-label"><div class="session-chk" id="chk_grip" onclick="flipSessionCheck('chk_grip')"></div></div>
                 </div>
-                <div style="text-align:right; font-size:10px; color:var(--text-muted); font-style:italic;" id="pool_str">Points Available: 7</div>
+                <div style="text-align:right; font-size:10px; color:var(--text-muted); font-style:italic;" id="pool_str">Points Invested: 0</div>
             </div>
 
             <div class="attr-wrapper dex">
@@ -284,7 +293,7 @@
                 <div class="skill-item-row">
                     <span class="clickable-roll-label" onclick="executeSkillD100Check('Grace', 'total_grace', 'chk_grace')">Grace</span><span id="base_grace">33%</span><input type="number" id="alloc_grace" value="0" onchange="runCalculations()"><span id="total_grace" class="skill-total-val">33%</span><div class="counter-tool"><button class="counter-btn" onclick="tally('crit_sk_gra',-1)">-</button><span class="counter-display" id="crit_sk_gra">0</span><button class="counter-btn" onclick="tally('crit_sk_gra',1)">+</button></div><div class="session-chk-label"><div class="session-chk" id="chk_grace" onclick="flipSessionCheck('chk_grace')"></div></div>
                 </div>
-                <div style="text-align:right; font-size:10px; color:var(--text-muted); font-style:italic;" id="pool_dex">Points Available: 7</div>
+                <div style="text-align:right; font-size:10px; color:var(--text-muted); font-style:italic;" id="pool_dex">Points Invested: 0</div>
             </div>
 
             <div class="attr-wrapper wil">
@@ -306,7 +315,7 @@
                 <div class="skill-item-row">
                     <span class="clickable-roll-label" onclick="executeSkillD100Check('Resolve', 'total_resolve', 'chk_resolve')">Resolve</span><span id="base_resolve">33%</span><input type="number" id="alloc_resolve" value="0" onchange="runCalculations()"><span id="total_resolve" class="skill-total-val">33%</span><div class="counter-tool"><button class="counter-btn" onclick="tally('crit_sk_res',-1)">-</button><span class="counter-display" id="crit_sk_res">0</span><button class="counter-btn" onclick="tally('crit_sk_res',1)">+</button></div><div class="session-chk-label"><div class="session-chk" id="chk_resolve" onclick="flipSessionCheck('chk_resolve')"></div></div>
                 </div>
-                <div style="text-align:right; font-size:10px; color:var(--text-muted); font-style:italic;" id="pool_wil">Points Available: 7</div>
+                <div style="text-align:right; font-size:10px; color:var(--text-muted); font-style:italic;" id="pool_wil">Points Invested: 0</div>
             </div>
         </div>
     </div>
@@ -344,7 +353,7 @@
                         </div>
                     </div>
                     <button class="auth-btn" style="background:var(--accent-taint); margin-top:8px; width:100%; cursor:pointer;" onclick="convertTaintToCorruption()">Purge Taint to Corruption</button>
-					<button class="auth-btn" style="margin-top:8px; width:100%; background:#7f1d1d;" onclick="drainCorruption(1)">Drain One from Corruption</button>
+                    <button class="auth-btn" style="margin-top:8px; width:100%; background:#7f1d1d;" onclick="drainCorruption(1)">Drain One from Corruption</button>
                 </div>
 
                 <div class="tracker-node" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
@@ -382,7 +391,7 @@
             
             <div id="proficiencyBlock">
                 <div class="prof-entry-row">
-					<input type="text" id="profTitle_1" value="Signature Proficiency (Main)" class="clickable-roll-label" style="text-align:left; color:white;" onclick="executeProficiencyD20Roll('profTitle_1', 'profC_1')">
+                    <input type="text" id="profTitle_1" value="Signature Proficiency (Main)" class="clickable-roll-label" style="text-align:left; color:white;" onclick="executeProficiencyD20Roll('profTitle_1', 'profC_1')">
                     <input type="number" id="profC_1" value="19" onchange="persistState()">
                     <input type="number" id="profM_1" value="19" onchange="persistState()">
                     <div class="counter-tool"><button class="counter-btn" onclick="tally('crit_prof_1',-1)">-</button><span class="counter-display" id="crit_prof_1">0</span><button class="counter-btn" onclick="tally('crit_prof_1',1)">+</button></div>
@@ -536,12 +545,68 @@
     </div>
 </div>
 
+<div class="container unlocked" id="calendarContainer" style="display: none; max-width: 1100px; grid-template-columns: 1fr;">
+    <div class="card" style="border-left: 5px solid var(--accent-taint);">
+        <div class="card-title">Chronological Matrix — <span id="calendarVesselName" style="color:var(--accent-gold);">Active Vessel Timeline</span></div>
+        
+        <div style="background: rgba(0,0,0,0.4); border:1px solid var(--border-color); padding: 18px; text-align: center; border-radius:4px; margin-bottom:15px;">
+            <span style="font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted);">Active Chrono Anchor Control Panel</span>
+            <div style="font-size: 18px; font-weight:bold; color:var(--text-main); margin-top:8px; display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap;">
+                The 
+                <input type="number" id="inputCrucibleNum" value="17" min="1" style="width:65px; background:#000; color:var(--accent-blood); border:1px solid var(--border-color); text-align:center; font-weight:bold; font-size:16px; border-radius:4px; padding:2px;" onchange="updateVesselEpochState()">
+                th Crucible of the 
+                <input type="text" id="inputAgeName" value="Age of Nightmares" style="background:#000; color:white; border:1px solid var(--border-color); padding:2px 8px; font-weight:bold; font-size:16px; border-radius:4px; min-width:240px; text-align:center;" onchange="updateVesselEpochState()">
+            </div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-bottom:15px; justify-content:center; background:rgba(0,0,0,0.2); padding:10px; border-radius:4px; border:1px solid var(--border-color); flex-wrap:wrap;">
+            <button class="auth-btn" style="background:var(--accent-blue); padding:6px 14px;" onclick="rollRandomWeeksForCrucible()">🎲 Roll Random Weeks for This Year</button>
+            <span style="color:var(--text-muted); align-self:center; font-size:11px; font-style:italic;">(Modify input counts inside cards for session updates)</span>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:10px;">
+            
+            <div class="accordion-block">
+                <div class="accordion-trigger" style="background:#141419; border-left:4px solid var(--accent-green);" onclick="toggleCalendarCycle('rejuv')">
+                    🌱 Cycle of Rejuvenation <span id="arrow_rejuv">▼</span>
+                </div>
+                <div id="content_rejuv" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:15px; padding:15px; background:rgba(0,0,0,0.1);"></div>
+            </div>
+
+            <div class="accordion-block">
+                <div class="accordion-trigger" style="background:#141419; border-left:4px solid var(--accent-gold);" onclick="toggleCalendarCycle('fest')">
+                    🍷 Cycle of Festivities <span id="arrow_fest">▶</span>
+                </div>
+                <div id="content_fest" style="display:none; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:15px; padding:15px; background:rgba(0,0,0,0.1);"></div>
+            </div>
+
+            <div class="accordion-block">
+                <div class="accordion-trigger" style="background:#141419; border-left:4px solid var(--accent-blood);" onclick="toggleCalendarCycle('valour')">
+                    ⚔️ Cycle of Valour <span id="arrow_valour">▶</span>
+                </div>
+                <div id="content_valour" style="display:none; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:15px; padding:15px; background:rgba(0,0,0,0.1);"></div>
+            </div>
+
+        </div>
+
+        <div id="transitionPeriodCard" class="card" style="margin-top:20px; background:rgba(107, 33, 168, 0.05); border: 1px dashed var(--accent-taint);">
+            <div style="font-weight:bold; color:#c084fc; text-transform:uppercase; font-size:11px; letter-spacing:1px;">⚠️ Anomalous Distortion Manifested</div>
+            <div style="font-size:14px; margin-top:6px; font-weight:bold;">Active Phase: Period of Transition</div>
+            <p style="color:var(--text-muted); font-size:12px; margin-top:4px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                Standard physical rules are suspended. Anomaly duration context parameters:
+                <input type="text" id="manualTransitionInput" value="Awaiting Session Roll..." 
+                       style="background:#000; color:#c084fc; border:1px solid var(--border-color); padding:4px 8px; border-radius:4px; font-size:12px; width:240px; font-weight:bold; text-align:center;"
+                       onchange="updateManualTransitionDuration(this.value)">
+            </p>
+        </div>
+    </div>
+</div>
+
 <script>
     // CLOUD INITIALIZATION INTERFACE WITH YOUR KEYS
     const SUPABASE_URL = "https://tovewipgxnpxvqhydveq.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvdmV3aXBneG5weHZxaHlkdmVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNDU0MzYsImV4cCI6MjA5NDkyMTQzNn0.kx0qPB8q68csr-zrv1gmoJJxzQFBnDoiDj0tzLJMJYc";
     
-    // SAFE OBJECT INSTANTIATION - ZERO DUPLICATIONS ALLOWED
     if (!window.supabaseClientInstance) {
         window.supabaseClientInstance = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     }
@@ -555,7 +620,7 @@
     const conversionTable = {
         2: 24, 3: 26, 4: 28, 5: 30, 6: 32, 
         7: 34, 8: 36, 9: 38, 10: 40, 11: 42, 12: 43,
-		13: 44, 14: 45, 15: 46, 16: 47, 17: 48, 18: 49
+        13: 44, 14: 45, 15: 46, 16: 47, 17: 48, 18: 49
     };
 
     const archonRegistry = [
@@ -727,14 +792,48 @@
                     node.value = cloudPayload[key];
                 }
             });
+            
+            currentCorruptionIndex = parseInt(cloudPayload['corruptionVal']) || 0;
         }
 
         runCalculations();
         refreshTrackers();
         updateSynthButtonVisibility();
+        updateHeaderDateBadgeDisplay(data?.sheet_data || {});
         
+        document.getElementById('toggleSheetBtn').style.display = 'inline-block';
+        document.getElementById('toggleCalBtn').style.display = 'inline-block';
+        switchInterfaceView('sheet');
+
         isCloudLoadingInProgress = false;
         document.getElementById('activeVesselDrop').value = vesselId;
+    }
+
+    function switchInterfaceView(targetView) {
+        const sheetPanel = document.getElementById('sheetContainer');
+        const calendarPanel = document.getElementById('calendarContainer');
+        const btnSheet = document.getElementById('toggleSheetBtn');
+        const btnCal = document.getElementById('toggleCalBtn');
+
+        if (targetView === 'calendar') {
+            sheetPanel.style.display = 'none';
+            calendarPanel.style.display = 'grid';
+            btnSheet.style.background = '#1e1e24';
+            btnCal.style.background = 'var(--accent-taint)';
+            loadAndRenderVesselCalendar();
+        } else {
+            sheetPanel.style.display = 'grid';
+            calendarPanel.style.display = 'none';
+            btnSheet.style.background = 'var(--accent-blood)';
+            btnCal.style.background = '#1e1e24';
+            
+            // Sync information text components seamlessly back to character header view anchor fields
+            if (loadedCloudVesselId && !isCloudLoadingInProgress) {
+                dbClient.from('character_vessels').select('sheet_data').eq('id', loadedCloudVesselId).single().then(({data}) => {
+                    if(data) updateHeaderDateBadgeDisplay(data.sheet_data || {});
+                });
+            }
+        }
     }
 
     // TRANSACTION DATA PIPELINES
@@ -755,8 +854,19 @@
         syncPacket['critMarkersDisplay'] = document.getElementById('critMarkersDisplay').innerText;
         syncPacket['favorTokens'] = document.getElementById('favorTokens').innerText;
         syncPacket['favorGlyphs'] = document.getElementById('favorGlyphs').innerText;
-		syncPacket['taintCur'] = document.getElementById('taintCur').value;
-		syncPacket['corruptionVal'] = currentCorruptionIndex;
+        syncPacket['taintCur'] = document.getElementById('taintCur').value;
+        syncPacket['corruptionVal'] = currentCorruptionIndex;
+
+        // Carry through current calendar memory indices across general tracking saves
+        const { data: currentVess } = await dbClient.from('character_vessels').select('sheet_data').eq('id', loadedCloudVesselId).single();
+        if (currentVess && currentVess.sheet_data) {
+            syncPacket['currentAge'] = currentVess.sheet_data.currentAge;
+            syncPacket['currentCrucible'] = currentVess.sheet_data.currentCrucible;
+            syncPacket['calendarCurrentMonth'] = currentVess.sheet_data.calendarCurrentMonth;
+            syncPacket['calendarCurrentDay'] = currentVess.sheet_data.calendarCurrentDay;
+            syncPacket['manualTransitionDuration'] = currentVess.sheet_data.manualTransitionDuration;
+            syncPacket['cruciblesData'] = currentVess.sheet_data.cruciblesData;
+        }
 
         for(let idx = 1; idx <= 24; idx++) {
             const nameEl = document.getElementById(`itemName_${idx}`);
@@ -768,7 +878,6 @@
 
         const currentNameInput = document.getElementById('characterName').value || 'Unnamed Vessel';
 
-        // Direct async cloud push execution
         await dbClient
             .from('character_vessels')
             .update({ character_name: currentNameInput, sheet_data: syncPacket, updated_at: new Date() })
@@ -958,7 +1067,6 @@
                 document.getElementById(`total_${skillKey}`).innerText = (referenceBase + allocation) + "%";
             });
 
-            const remainingBalance = parsedVal - currentAllocPoints;
             const targetTrackerLabel = document.getElementById(`pool_${nodeKey}`);
             targetTrackerLabel.innerText = `Points Invested: ${currentAllocPoints}`;
             targetTrackerLabel.style.color = 'var(--text-muted)';
@@ -1023,31 +1131,30 @@
         persistState();
     }
 
-    // NEW FLUID DYNAMIC MATH LOGIC VECTOR FOR TAINT OVERFLOWS
-	let currentCorruptionIndex = 0;
+    let currentCorruptionIndex = 0;
 
-	function refreshTrackers() {
-		const rCur = parseInt(document.getElementById('rmCur').value, 10) || 0;
-		const rMax = parseInt(document.getElementById('rmMax').value, 10) || 120;
-		const safeRMax = rMax <= 0 ? 1 : rMax;
+    function refreshTrackers() {
+        const rCur = parseInt(document.getElementById('rmCur').value, 10) || 0;
+        const rMax = parseInt(document.getElementById('rmMax').value, 10) || 120;
+        const safeRMax = rMax <= 0 ? 1 : rMax;
 
-		document.getElementById('rmTxt').innerText = `${rCur} / ${rMax}`;
-		document.getElementById('rmMeter').style.width = Math.min(Math.max((rCur / safeRMax) * 100, 0), 100) + '%';
+        document.getElementById('rmTxt').innerText = `${rCur} / ${rMax}`;
+        document.getElementById('rmMeter').style.width = Math.min(Math.max((rCur / safeRMax) * 100, 0), 100) + '%';
 
-		const tCur = parseInt(document.getElementById('taintCur').value, 10) || 0;
-		document.getElementById('taintTxt').innerText = `${tCur} Points Accumulated`;
-		document.getElementById('taintMeter').style.width = Math.min(Math.max(tCur, 0), 100) + '%';
+        const tCur = parseInt(document.getElementById('taintCur').value, 10) || 0;
+        document.getElementById('taintTxt').innerText = `${tCur} Points Accumulated`;
+        document.getElementById('taintMeter').style.width = Math.min(Math.max(tCur, 0), 100) + '%';
 
-		currentCorruptionIndex = Math.min(Math.max(parseInt(currentCorruptionIndex, 10) || 0, 0), 800);
-		document.getElementById('corruptionTxt').innerText = `${currentCorruptionIndex}%`;
-		document.getElementById('corruptionMeter').style.width = `${Math.min(currentCorruptionIndex, 100)}%`;
+        currentCorruptionIndex = Math.min(Math.max(parseInt(currentCorruptionIndex, 10) || 0, 0), 800);
+        document.getElementById('corruptionTxt').innerText = `${currentCorruptionIndex}%`;
+        document.getElementById('corruptionMeter').style.width = `${Math.min(currentCorruptionIndex, 100)}%`;
 
-		const vCur = parseInt(document.getElementById('veilCur').value, 10) || 0;
-		document.getElementById('veilTxt').innerText = `${vCur} / 100`;
-		document.getElementById('veilMeter').style.width = Math.min(Math.max(vCur, 0), 100) + '%';
+        const vCur = parseInt(document.getElementById('veilCur').value, 10) || 0;
+        document.getElementById('veilTxt').innerText = `${vCur} / 100`;
+        document.getElementById('veilMeter').style.width = Math.min(Math.max(vCur, 0), 100) + '%';
 
-		persistState();
-	}
+        persistState();
+    }
 
     function triggerSigilRoll(sigilLabel, attrFieldId, tokenElementId) {
         const tokenDisplayNode = document.getElementById(tokenElementId);
@@ -1124,26 +1231,316 @@
             <div style="font-size:14px; color:${visualHexColor}; margin-top:2px; font-weight:bold;">[Roll ${oracleDieResult}] — ${abstractJudgment}</div>
         `;
     }
-	function convertTaintToCorruption() {
-		const taintInput = document.getElementById('taintCur');
-		const taintValue = parseInt(taintInput.value, 10) || 0;
 
-		if (taintValue <= 0) {
-			alert("No Taint to purge.");
-			return;
-		}
+    function convertTaintToCorruption() {
+        const taintInput = document.getElementById('taintCur');
+        const taintValue = parseInt(taintInput.value, 10) || 0;
 
-		const addedCorruption = Math.floor((taintValue / 100) * 35);
-		currentCorruptionIndex = Math.max(0, currentCorruptionIndex + addedCorruption);
+        if (taintValue <= 0) {
+            alert("No Taint to purge.");
+            return;
+        }
 
-		taintInput.value = 0;
-		refreshTrackers();
-	}
+        const addedCorruption = Math.floor((taintValue / 100) * 35);
+        currentCorruptionIndex = Math.max(0, currentCorruptionIndex + addedCorruption);
 
-	function drainCorruption(amount = 1) {
-		currentCorruptionIndex = Math.max(0, currentCorruptionIndex - amount);
-		refreshTrackers();
-	}
+        taintInput.value = 0;
+        refreshTrackers();
+    }
+
+    function drainCorruption(amount = 1) {
+        currentCorruptionIndex = Math.max(0, currentCorruptionIndex - amount);
+        refreshTrackers();
+    }
+// =======================================================
+//     DYNAMIC PROGRESSION ORBITAL ENGINE
+// =======================================================
+
+// Master Sequential Cosmic Loop Order
+const archonOrbitOrder = [
+    "Archon of Ember & Passion/Will",
+    "Archon of Stone & Memory/Endurance",
+    "Archon of Moon & Mystique/Secrets",
+    "Archon of Gale & Freedom/Thought",
+    "Archon of Frost & Silence/Stagnation",
+    "Archon of Tides & Reflection/Emotions",
+    "Archon of Earth & Forge/Structure",
+    "Archon of Acorn & Renewal/Growth"
+];
+
+function initializeCrucibleRegistry(payload, targetCrucibleNum, forcedStartOrbitIndex = null) {
+    if (!payload.cruciblesData) payload.cruciblesData = {};
+    
+    if (payload.cruciblesData[targetCrucibleNum] && forcedStartOrbitIndex === null) return;
+
+    let startIndex = 0;
+    if (forcedStartOrbitIndex !== null) {
+        startIndex = forcedStartOrbitIndex;
+    } else if (payload.cruciblesData[targetCrucibleNum]?.startArchonIndex !== undefined) {
+        startIndex = payload.cruciblesData[targetCrucibleNum].startArchonIndex;
+    }
+
+    let dynamicMonths = [];
+
+    for (let i = 0; i < 8; i++) {
+        const currentOrbitPos = (startIndex + i) % 8;
+        const archonName = archonOrbitOrder[currentOrbitPos];
+        
+        let cycleKey = "rejuv";
+        let color = "var(--accent-green)";
+        let defaultWeeks = 4;
+
+        if (i >= 3 && i <= 4) { 
+            cycleKey = "fest";
+            color = "var(--accent-gold)";
+        } else if (i >= 5) { 
+            cycleKey = "valour";
+            color = "var(--accent-blood)";
+        }
+
+        let assignedWeeks = defaultWeeks;
+        if (payload.cruciblesData[targetCrucibleNum] && payload.cruciblesData[targetCrucibleNum].months[i]) {
+            assignedWeeks = payload.cruciblesData[targetCrucibleNum].months[i].weeks;
+        } else {
+            if (targetCrucibleNum == 17) {
+                if (i === 6) assignedWeeks = 5; 
+                if (i === 7) assignedWeeks = 8; 
+            }
+        }
+
+        dynamicMonths.push({
+            index: i + 1,
+            orbitIndex: currentOrbitPos,
+            name: archonName,
+            cycle: cycleKey,
+            weeks: assignedWeeks,
+            color: color
+        });
+    }
+
+    payload.cruciblesData[targetCrucibleNum] = {
+        startArchonIndex: startIndex,
+        months: dynamicMonths,
+        manualTransitionDuration: payload.cruciblesData[targetCrucibleNum]?.manualTransitionDuration || "Awaiting Session Roll..."
+    };
+}
+
+async function loadAndRenderVesselCalendar() {
+    if (!loadedCloudVesselId) return;
+
+    const vesselSelectionDrop = document.getElementById('activeVesselDrop');
+    document.getElementById('calendarVesselName').innerText = vesselSelectionDrop.options[vesselSelectionDrop.selectedIndex].text;
+
+    const { data: vesselData } = await dbClient.from('character_vessels').select('sheet_data').eq('id', loadedCloudVesselId).single();
+    let payload = vesselData?.sheet_data || {};
+    
+    if (!payload.currentAge) payload.currentAge = "Age of Nightmares";
+    if (!payload.currentCrucible) payload.currentCrucible = 17;
+    if (!payload.calendarCurrentMonth) payload.calendarCurrentMonth = 7; 
+    if (!payload.calendarCurrentDay) payload.calendarCurrentDay = 1;
+
+    document.getElementById('inputAgeName').value = payload.currentAge;
+    document.getElementById('inputCrucibleNum').value = payload.currentCrucible;
+
+    initializeCrucibleRegistry(payload, payload.currentCrucible);
+    const yearData = payload.cruciblesData[payload.currentCrucible];
+
+    let selectorHTML = `<span style="font-size:11px; color:var(--text-muted); margin-left:15px;">Orbit Origin: </span>
+                        <select onchange="handleOrbitStartChange(this.value)" style="background:#000; color:var(--accent-gold); border:1px solid var(--border-color); font-size:11px; font-weight:bold; padding:2px 6px; border-radius:3px;">`;
+    archonOrbitOrder.forEach((name, idx) => {
+        const selectedMarker = (yearData.startArchonIndex === idx) ? 'selected' : '';
+        selectorHTML += `<option value="${idx}" ${selectedMarker}>${name.split(' & ')[0]}</option>`;
+    });
+    selectorHTML += `</select>`;
+
+    const controlPanel = document.getElementById('inputAgeName').parentElement;
+    const cleanLabelHTML = `The <input type="number" id="inputCrucibleNum" value="${payload.currentCrucible}" min="1" style="width:65px; background:#000; color:var(--accent-blood); border:1px solid var(--border-color); text-align:center; font-weight:bold; font-size:16px; border-radius:4px; padding:2px;" onchange="updateVesselEpochState()"> th Crucible of the <input type="text" id="inputAgeName" value="${payload.currentAge}" style="background:#000; color:white; border:1px solid var(--border-color); padding:2px 8px; font-weight:bold; font-size:16px; border-radius:4px; min-width:240px; text-align:center;" onchange="updateVesselEpochState()">`;
+    controlPanel.innerHTML = cleanLabelHTML + selectorHTML;
+
+    const rejuvContainer = document.getElementById('content_rejuv');
+    const festContainer = document.getElementById('content_fest');
+    const valourContainer = document.getElementById('content_valour');
+    
+    rejuvContainer.innerHTML = '';
+    festContainer.innerHTML = '';
+    valourContainer.innerHTML = '';
+
+    let globalDayAccumulator = 0;
+    let globalBloodMoonDayPillars = [];
+    let anchorGlobalDayOffset = 0;
+
+    yearData.months.forEach(m => {
+        if (m.name.includes("Earth & Forge")) {
+            anchorGlobalDayOffset = globalDayAccumulator + 7; 
+        }
+        globalDayAccumulator += m.weeks * 8;
+    });
+
+    for (let d = anchorGlobalDayOffset; d <= globalDayAccumulator; d += 14) globalBloodMoonDayPillars.push(d);
+    for (let d = anchorGlobalDayOffset - 14; d > 0; d -= 14) globalBloodMoonDayPillars.push(d);
+
+    let evaluatedDaysPassed = 0;
+
+    yearData.months.forEach(m => {
+        const isCurrentMonth = (payload.calendarCurrentMonth == m.index);
+        const activeCardBorder = isCurrentMonth ? `border: 2px solid var(--accent-gold); box-shadow: 0 0 15px rgba(217, 119, 6, 0.15);` : '';
+        
+        let daysGridHTML = '';
+        const totalDaysInThisMonth = m.weeks * 8;
+        
+        for (let d = 1; d <= totalDaysInThisMonth; d++) {
+            evaluatedDaysPassed++;
+            let dayStyles = `width:24px; height:24px; display:flex; align-items:center; justify-content:center; border-radius:3px; font-size:10px; cursor:pointer; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.05); transition:transform 0.1s;`;
+            let dayContent = d;
+
+            if (isCurrentMonth && payload.calendarCurrentDay == d) {
+                dayStyles += `background:var(--accent-gold); color:black; font-weight:bold; box-shadow:0 0 8px var(--accent-gold); transform:scale(1.08);`;
+            }
+
+            if (globalBloodMoonDayPillars.includes(evaluatedDaysPassed)) {
+                dayStyles += `border-color: #f43f5e; color: #f43f5e; font-weight:bold;`;
+                dayContent = '🔴';
+                if (isCurrentMonth && payload.calendarCurrentDay == d) {
+                    dayStyles += `background:#f43f5e; color:black; box-shadow:0 0 8px #f43f5e;`;
+                }
+            }
+
+            daysGridHTML += `<div style="${dayStyles}" onclick="setVesselActiveDay(${m.index}, ${d})" title="Day ${d}${globalBloodMoonDayPillars.includes(evaluatedDaysPassed) ? ' - Blood Moon' : ''}">${dayContent}</div>`;
+        }
+
+        const monthBlueprintCard = `
+            <div class="card" style="background:var(--panel-nested); border-top: 3px solid ${m.color}; padding:12px; ${activeCardBorder}">
+                <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:8px; gap:5px;">
+                    <div>
+                        <span style="font-size:8px; text-transform:uppercase; color:var(--text-muted); font-weight:bold;">Month ${m.index}</span>
+                        <div style="font-size:12px; font-weight:bold; color:white; margin-top:1px; line-height:1.2;">${m.name.split(' & ')[0]}</div>
+                    </div>
+                    <div style="text-align:right; min-width:75px;">
+                        <input type="number" value="${m.weeks}" min="1" max="12" 
+                               style="width:38px; background:#000; color:var(--accent-gold); border:1px solid var(--border-color); text-align:center; font-size:11px; font-weight:bold; border-radius:3px;"
+                               onchange="updateManualMonthWeeks(${m.index}, this.value)">
+                        <span style="font-size:10px; color:var(--text-muted); font-weight:bold; margin-left:2px;">Wk</span>
+                        <div style="font-size:9px; color:var(--text-muted); margin-top:2px;">${totalDaysInThisMonth} Days</div>
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns: repeat(8, 1fr); gap:4px; margin-top:10px; justify-items:center;">
+                    ${daysGridHTML}
+                </div>
+            </div>
+        `;
+
+        if (m.cycle === 'rejuv') rejuvContainer.innerHTML += monthBlueprintCard;
+        else if (m.cycle === 'fest') festContainer.innerHTML += monthBlueprintCard;
+        else if (m.cycle === 'valour') valourContainer.innerHTML += monthBlueprintCard;
+    });
+
+    document.getElementById('manualTransitionInput').value = yearData.manualTransitionDuration || "Awaiting Session Roll...";
+    updateHeaderDateBadgeDisplay(payload);
+}
+
+async function setVesselActiveDay(monthIdx, dayNum) {
+    if (!loadedCloudVesselId || isCloudLoadingInProgress) return;
+    const { data: vesselData } = await dbClient.from('character_vessels').select('sheet_data').eq('id', loadedCloudVesselId).single();
+    let payload = vesselData?.sheet_data || {};
+    payload.calendarCurrentMonth = monthIdx;
+    payload.calendarCurrentDay = dayNum;
+    await dbClient.from('character_vessels').update({ sheet_data: payload }).eq('id', loadedCloudVesselId);
+    loadAndRenderVesselCalendar();
+}
+
+async function updateManualMonthWeeks(monthIndex, weekValue) {
+    if (!loadedCloudVesselId || isCloudLoadingInProgress) return;
+    const targetWeeks = Math.max(1, parseInt(weekValue) || 4);
+    const activeCrucible = parseInt(document.getElementById('inputCrucibleNum').value) || 17;
+
+    const { data: vesselData } = await dbClient.from('character_vessels').select('sheet_data').eq('id', loadedCloudVesselId).single();
+    let payload = vesselData?.sheet_data || {};
+
+    initializeCrucibleRegistry(payload, activeCrucible);
+    const targetMonthObj = payload.cruciblesData[activeCrucible].months.find(m => m.index === monthIndex);
+    if (targetMonthObj) targetMonthObj.weeks = targetWeeks;
+
+    await dbClient.from('character_vessels').update({ sheet_data: payload }).eq('id', loadedCloudVesselId);
+    loadAndRenderVesselCalendar();
+}
+
+async function rollRandomWeeksForCrucible() {
+    if (!loadedCloudVesselId || isCloudLoadingInProgress) return;
+    const activeCrucible = parseInt(document.getElementById('inputCrucibleNum').value) || 17;
+    const { data: vesselData } = await dbClient.from('character_vessels').select('sheet_data').eq('id', loadedCloudVesselId).single();
+    let payload = vesselData?.sheet_data || {};
+    initializeCrucibleRegistry(payload, activeCrucible);
+    payload.cruciblesData[activeCrucible].months.forEach(m => {
+        m.weeks = Math.floor(Math.random() * 6) + 3;
+    });
+    const d100 = Math.floor(Math.random() * 100) + 1;
+    const d8 = Math.floor(Math.random() * 8) + 1;
+    let unit = "Days";
+    if (d100 <= 5) unit = "Days";
+    else if (d100 <= 57) unit = "Weeks";
+    else if (d100 <= 94) unit = "Months";
+    else unit = "Crucibles";
+    payload.cruciblesData[activeCrucible].manualTransitionDuration = `${d8} ${unit} (Rolled ${d100} on d100)`;
+    await dbClient.from('character_vessels').update({ sheet_data: payload }).eq('id', loadedCloudVesselId);
+    loadAndRenderVesselCalendar();
+}
+
+async function updateVesselEpochState() {
+    if (!loadedCloudVesselId || isCloudLoadingInProgress) return;
+    const freshCrucible = parseInt(document.getElementById('inputCrucibleNum').value) || 17;
+    const freshAge = document.getElementById('inputAgeName').value || "Age of Nightmares";
+    const { data: vesselData } = await dbClient.from('character_vessels').select('sheet_data').eq('id', loadedCloudVesselId).single();
+    let payload = vesselData?.sheet_data || {};
+    payload.currentCrucible = freshCrucible;
+    payload.currentAge = freshAge;
+    initializeCrucibleRegistry(payload, freshCrucible);
+    await dbClient.from('character_vessels').update({ sheet_data: payload }).eq('id', loadedCloudVesselId);
+    loadAndRenderVesselCalendar();
+}
+
+function updateHeaderDateBadgeDisplay(payload) {
+    const badge = document.getElementById('sheetHeaderDateBadge');
+    if (!badge) return;
+    if (payload.calendarCurrentMonth && payload.calendarCurrentDay) {
+        const shorthandCruc = payload.currentCrucible || 17;
+        badge.innerText = `C${shorthandCruc} • M${payload.calendarCurrentMonth} D${payload.calendarCurrentDay}`;
+    } else {
+        badge.innerText = "Set Date";
+    }
+}
+
+async function handleOrbitStartChange(selectedOrbitIndex) {
+    if (!loadedCloudVesselId || isCloudLoadingInProgress) return;
+    const targetIdx = parseInt(selectedOrbitIndex);
+    const activeCrucible = parseInt(document.getElementById('inputCrucibleNum').value) || 17;
+    const { data: vesselData } = await dbClient.from('character_vessels').select('sheet_data').eq('id', loadedCloudVesselId).single();
+    let payload = vesselData?.sheet_data || {};
+    initializeCrucibleRegistry(payload, activeCrucible, targetIdx);
+    await dbClient.from('character_vessels').update({ sheet_data: payload }).eq('id', loadedCloudVesselId);
+    loadAndRenderVesselCalendar();
+}
+
+async function updateManualTransitionDuration(value) {
+    if (!loadedCloudVesselId || isCloudLoadingInProgress) return;
+    const { data: vesselData } = await dbClient.from('character_vessels').select('sheet_data').eq('id', loadedCloudVesselId).single();
+    let payload = vesselData?.sheet_data || {};
+    payload.manualTransitionDuration = value;
+    await dbClient.from('character_vessels').update({ sheet_data: payload }).eq('id', loadedCloudVesselId);
+}
+
+function toggleCalendarCycle(cycleKey) {
+    const panel = document.getElementById('content_' + cycleKey);
+    const arrow = document.getElementById('arrow_' + cycleKey);
+    if (!panel || !arrow) return;
+    if (panel.style.display === 'none') {
+        panel.style.display = 'grid';
+        arrow.innerText = '▼';
+    } else {
+        panel.style.display = 'none';
+        arrow.innerText = '▶';
+    }
+}
+    
 </script>
 
 </body>
