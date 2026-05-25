@@ -1798,14 +1798,13 @@
             const { data, error } = await dbClient
                 .from('character_vessels')
                 .select('id, character_name')
-                .neq('character_name', '__GLOBAL_CAMPAIGN__')
                 .order('updated_at', { ascending: false });
 
             if (error) { console.error("Library extraction crash", error); return; }
 
             const drop = document.getElementById('activeVesselDrop');
             drop.innerHTML = '<option value="">-- Summon Assigned Vessel --</option>';
-            data.forEach(vess => {
+            data.filter(v => v.character_name !== '__GLOBAL_CAMPAIGN__').forEach(vess => {
                 drop.innerHTML += `<option value="${vess.id}">${vess.character_name}</option>`;
             });
 
