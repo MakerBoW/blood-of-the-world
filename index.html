@@ -1752,7 +1752,7 @@
         }
 
         // Connect into the Supabase Session Stream
-        dbClient.auth.onAuthStateChange(async (event, session) => {
+        dbClient.auth.onAuthStateChange((event, session) => {
             currentUserSession = session;
             const outPanel = document.getElementById('loggedOutZone');
             const inPanel = document.getElementById('loggedInZone');
@@ -1764,20 +1764,26 @@
                 sheetElement.classList.add('unlocked');
                 document.getElementById('userDisplayTag').innerText = `Vessel Account: ${session.user.email}`;
 
-                // Check admin role from user_roles table (managed entirely in Supabase)
-                const { data: roleRow } = await dbClient
-                    .from('user_roles')
-                    .select('role')
-                    .eq('user_id', session.user.id)
-                    .maybeSingle();
-                isVesselAdminMode = roleRow?.role === 'admin';
-                const adminBadge = document.getElementById('adminRoleBadge');
-                if (adminBadge) adminBadge.style.display = isVesselAdminMode ? 'inline-block' : 'none';
+                // Admin role check runs in background — does NOT block fetchVesselLibrary
+                (async () => {
+                    try {
+                        const { data: roleRow } = await dbClient
+                            .from('user_roles')
+                            .select('role')
+                            .eq('user_id', session.user.id)
+                            .maybeSingle();
+                        isVesselAdminMode = roleRow?.role === 'admin';
+                    } catch (e) {
+                        isVesselAdminMode = false;
+                    }
+                    const adminBadge = document.getElementById('adminRoleBadge');
+                    if (adminBadge) adminBadge.style.display = isVesselAdminMode ? 'inline-block' : 'none';
+                })();
 
-                // Global Achievements tab is accessible to ALL logged-in accounts immediately
+                // Always runs immediately regardless of admin check result
                 document.getElementById('toggleAchieveBtn').style.display = 'inline-block';
-
                 fetchVesselLibrary();
+
             } else {
                 outPanel.style.display = 'flex';
                 inPanel.style.display = 'none';
