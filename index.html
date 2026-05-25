@@ -1702,7 +1702,8 @@
         // ── ADMIN ROLE CONFIGURATION ──────────────────────────────────────────
         // Add the authorized admin account email(s) here. Any account whose
         // email matches will receive full Registry-of-Deeds edit rights.
-        const ADMIN_EMAILS = ['admin@bloodoftheworld.com']; // ← replace with your admin email
+        // Admin role is managed via the user_roles table in Supabase —
+        // to grant/revoke admin: INSERT/UPDATE rows in public.user_roles
         // ─────────────────────────────────────────────────────────────────────
         let isVesselAdminMode = false;
 
@@ -1743,12 +1744,15 @@
         }
 
         async function handleLogout() {
+            isCloudLoadingInProgress = false; // unfreeze any stuck state first
+            loadedCloudVesselId = null;
+            isVesselAdminMode = false;
             await dbClient.auth.signOut();
             location.reload();
         }
 
         // Connect into the Supabase Session Stream
-        dbClient.auth.onAuthStateChange((event, session) => {
+        dbClient.auth.onAuthStateChange(async (event, session) => {
             currentUserSession = session;
             const outPanel = document.getElementById('loggedOutZone');
             const inPanel = document.getElementById('loggedInZone');
@@ -1760,13 +1764,15 @@
                 sheetElement.classList.add('unlocked');
                 document.getElementById('userDisplayTag').innerText = `Vessel Account: ${session.user.email}`;
 
-                // ── TEMPORARY: all logged-in accounts treated as admin ──────────
-                // Replace the line below with the ADMIN_EMAILS check once deployed:
-                // isVesselAdminMode = ADMIN_EMAILS.includes(session.user.email.toLowerCase());
-                isVesselAdminMode = true;
-                // ───────────────────────────────────────────────────────────────
+                // Check admin role from user_roles table (managed entirely in Supabase)
+                const { data: roleRow } = await dbClient
+                    .from('user_roles')
+                    .select('role')
+                    .eq('user_id', session.user.id)
+                    .maybeSingle();
+                isVesselAdminMode = roleRow?.role === 'admin';
                 const adminBadge = document.getElementById('adminRoleBadge');
-                if (adminBadge) adminBadge.style.display = 'none'; // hide badge until real admin is set up
+                if (adminBadge) adminBadge.style.display = isVesselAdminMode ? 'inline-block' : 'none';
 
                 // Global Achievements tab is accessible to ALL logged-in accounts immediately
                 document.getElementById('toggleAchieveBtn').style.display = 'inline-block';
@@ -1786,6 +1792,7 @@
             const { data, error } = await dbClient
                 .from('character_vessels')
                 .select('id, character_name')
+                .neq('character_name', '__GLOBAL_CAMPAIGN__')
                 .order('updated_at', { ascending: false });
 
             if (error) { console.error("Library extraction crash", error); return; }
@@ -1856,13 +1863,22 @@
             isCloudLoadingInProgress = true;
             loadedCloudVesselId = vesselId;
 
-            const { data, error } = await dbClient
-                .from('character_vessels')
-                .select('*')
-                .eq('id', vesselId)
-                .single();
+            try {
+                const { data, error } = await dbClient
+                    .from('character_vessels')
+                    .select('*')
+                    .eq('id', vesselId)
+                    .single();
 
-            if (error) { alert("Failed downloading sheet matrix"); isCloudLoadingInProgress = false; return; }
+                if (error) { alert("Failed downloading sheet matrix"); return; }
+
+                // Safety: never load the global campaign row as a character sheet
+                if (data?.character_name === '__GLOBAL_CAMPAIGN__') {
+                    alert("That entry is the Global Triumphs record — it cannot be loaded as a vessel.\n\nPlease select a character vessel from the dropdown.");
+                    loadedCloudVesselId = null;
+                    document.getElementById('activeVesselDrop').value = '';
+                    return;
+                }
 
             if (data && data.sheet_data) {
                 const cloudPayload = data.sheet_data;
@@ -1912,10 +1928,15 @@
             document.getElementById('toggleNotesBtn').style.display = 'inline-block';
             const addDeedBtn = document.getElementById('addPersonalDeedBtn');
             if (addDeedBtn) addDeedBtn.style.display = 'inline-block';
-            switchInterfaceView('sheet');
+                switchInterfaceView('sheet');
+                document.getElementById('activeVesselDrop').value = vesselId;
 
-            isCloudLoadingInProgress = false;
-            document.getElementById('activeVesselDrop').value = vesselId;
+            } catch (err) {
+                console.error('switchActiveVesselToId error:', err);
+                alert('Failed to load vessel. Please try again.');
+            } finally {
+                isCloudLoadingInProgress = false;
+            }
         }
 
         function switchInterfaceView(targetView) {
@@ -2090,6 +2111,7 @@
                                     onchange="saveDeedField(${index}, 'desc', this.value, false)">${descVal}</textarea>
                         </div>
                         <div style="display:flex; flex-direction:column; align-items:center; gap:6px; min-width:56px;">
+                            ${isVesselAdminMode ? `
                             <input  type="number"
                                     class="deed-ap-input"
                                     value="${claimAP}"
@@ -2097,6 +2119,10 @@
                                     title="AP reward"
                                     onchange="saveDeedField(${index}, 'apValue', this.value, false)">
                             <span style="font-size:9px; color:var(--text-muted); text-transform:uppercase;">AP</span>
+                            ` : `
+                            <span class="status-pill" style="color:var(--accent-gold); background:rgba(217,119,6,0.05); font-weight:bold; font-size:11px; padding:2px 5px;">+${claimAP}</span>
+                            <span style="font-size:9px; color:var(--text-muted); text-transform:uppercase;">AP</span>
+                            `}
                             <div class="session-chk ${statusClass}"
                                  title="${isClaimed ? 'Mark unclaimed' : 'Claim deed'}"
                                  onclick="togglePlayerDeedClaim('${inputIdPrefix}_${index}', ${claimAP})"></div>
@@ -2184,32 +2210,47 @@
             }
 
             if (isGlobalTarget) {
-                // Global deeds — admin task (left for later)
                 if (!isVesselAdminMode) return;
-                let { data: globalRow } = await dbClient.from('character_vessels').select('*').eq('character_name', '__GLOBAL_CAMPAIGN__').maybeSingle();
 
-                // If the global row doesn't exist yet, create it
+                // Fetch the shared global row (must already exist — see Supabase setup notes)
+                let { data: globalRow, error: fetchErr } = await dbClient
+                    .from('character_vessels')
+                    .select('*')
+                    .eq('character_name', '__GLOBAL_CAMPAIGN__')
+                    .maybeSingle();
+
+                // Row missing → guide the admin to create it once from the Supabase SQL editor
                 if (!globalRow) {
-                    const { data: newRow } = await dbClient
-                        .from('character_vessels')
-                        .insert([{ character_name: "__GLOBAL_CAMPAIGN__", sheet_data: { dynamicAchievementsList: [] } }])
-                        .select()
-                        .single();
-                    globalRow = newRow;
+                    alert(
+                        "The Global Triumphs record does not exist in the database yet.\n\n" +
+                        "Run this once in your Supabase SQL Editor:\n\n" +
+                        "INSERT INTO character_vessels (character_name, sheet_data)\n" +
+                        "VALUES ('__GLOBAL_CAMPAIGN__', '{\"dynamicAchievementsList\": []}');\n\n" +
+                        "Then refresh and try again."
+                    );
+                    return;
                 }
 
                 let gPayload = globalRow.sheet_data || { dynamicAchievementsList: [] };
                 if (!gPayload.dynamicAchievementsList) gPayload.dynamicAchievementsList = [];
 
                 gPayload.dynamicAchievementsList.push({
-                    title: "New Global Legend",
-                    desc: "...",
+                    title: "New Global Triumph",
+                    desc: "Describe this campaign-wide achievement...",
                     apValue: 0,
-                    isGlobal: true,
                     achievedBy: "",
                     achievedWhen: ""
                 });
-                await dbClient.from('character_vessels').update({ sheet_data: gPayload }).eq('id', globalRow.id);
+
+                const { error: updateErr } = await dbClient
+                    .from('character_vessels')
+                    .update({ sheet_data: gPayload })
+                    .eq('id', globalRow.id);
+
+                if (updateErr) {
+                    alert("Could not save: " + updateErr.message + "\n\nMake sure the Supabase RLS policy allows admin writes to the __GLOBAL_CAMPAIGN__ row.");
+                    return;
+                }
 
             } else {
                 // Handle Personal Achievements (The "Forge Personal Deed" button)
@@ -2275,14 +2316,15 @@
         }
         // ────────────────────────────────────────────────────────────────────────
 
-        // ── Save a single field on a personal deed (open to all vessel owners) ─
+        // ── Save a single field on a deed ────────────────────────────────────────
         async function saveDeedField(index, property, rawValue, isGlobal) {
             if (isCloudLoadingInProgress) return;
             if (isGlobal) {
-                // Global deed editing is the admin task — skip for now
                 if (!isVesselAdminMode) return;
-                const { data: globalRow } = await dbClient.from('character_vessels').select('*').eq('character_name', '__GLOBAL_CAMPAIGN__').single();
-                let gPayload = globalRow.sheet_data;
+                const { data: globalRow } = await dbClient.from('character_vessels').select('*').eq('character_name', '__GLOBAL_CAMPAIGN__').maybeSingle();
+                if (!globalRow) { console.warn('__GLOBAL_CAMPAIGN__ row not found'); return; }
+                let gPayload = globalRow.sheet_data || { dynamicAchievementsList: [] };
+                if (!gPayload.dynamicAchievementsList) gPayload.dynamicAchievementsList = [];
                 if (gPayload.dynamicAchievementsList[index]) {
                     gPayload.dynamicAchievementsList[index][property] = property === 'apValue' ? Math.max(0, parseInt(rawValue) || 0) : rawValue;
                 }
@@ -2290,7 +2332,8 @@
             } else {
                 if (!loadedCloudVesselId) return;
                 const { data: vesselData } = await dbClient.from('character_vessels').select('sheet_data').eq('id', loadedCloudVesselId).single();
-                let payload = vesselData.sheet_data;
+                let payload = vesselData?.sheet_data || { dynamicAchievementsList: [] };
+                if (!payload.dynamicAchievementsList) payload.dynamicAchievementsList = [];
                 if (payload.dynamicAchievementsList[index]) {
                     payload.dynamicAchievementsList[index][property] = property === 'apValue' ? Math.max(0, parseInt(rawValue) || 0) : rawValue;
                 }
@@ -2298,32 +2341,31 @@
             }
         }
 
-        // ── Keep old name as alias so existing global-deed admin code still works ─
         async function syncAdminAchievementMutation(index, property, rawValue, isGlobal) {
             return saveDeedField(index, property, rawValue, isGlobal);
         }
 
-        // ── Remove a deed entry (open to vessel owner for personal deeds) ────────
+        // ── Remove a deed entry ───────────────────────────────────────────────────
         async function removeDeedEntry(index, isGlobal) {
             if (isCloudLoadingInProgress) return;
+            if (isGlobal && !isVesselAdminMode) return;
             if (!confirm("Remove this deed permanently?")) return;
             if (isGlobal) {
-                if (!isVesselAdminMode) return;
-                const { data: globalRow } = await dbClient.from('character_vessels').select('*').eq('character_name', '__GLOBAL_CAMPAIGN__').single();
-                let gPayload = globalRow.sheet_data;
+                const { data: globalRow } = await dbClient.from('character_vessels').select('*').eq('character_name', '__GLOBAL_CAMPAIGN__').maybeSingle();
+                if (!globalRow) return;
+                let gPayload = globalRow.sheet_data || { dynamicAchievementsList: [] };
                 gPayload.dynamicAchievementsList.splice(index, 1);
                 await dbClient.from('character_vessels').update({ sheet_data: gPayload }).eq('id', globalRow.id);
             } else {
                 if (!loadedCloudVesselId) return;
                 const { data: vesselData } = await dbClient.from('character_vessels').select('sheet_data').eq('id', loadedCloudVesselId).single();
-                let payload = vesselData.sheet_data;
+                let payload = vesselData?.sheet_data || { dynamicAchievementsList: [] };
                 payload.dynamicAchievementsList.splice(index, 1);
                 await dbClient.from('character_vessels').update({ sheet_data: payload }).eq('id', loadedCloudVesselId);
             }
             loadAndRenderAchievementsSystem();
         }
 
-        // ── Keep old name as alias ────────────────────────────────────────────────
         async function purgeAdminAchievementNode(index, isGlobal) {
             return removeDeedEntry(index, isGlobal);
         }
@@ -2331,6 +2373,11 @@
         async function togglePlayerDeedClaim(compositeKey, apReward) {
             if (!loadedCloudVesselId || isCloudLoadingInProgress) {
                 if (!loadedCloudVesselId) alert("Select a vessel from the top bar to claim deeds and receive AP rewards.");
+                return;
+            }
+            // Only admin accounts may award AP via deed claims
+            if (!isVesselAdminMode) {
+                alert("AP rewards can only be assigned by an admin account.");
                 return;
             }
             const { data: vesselData } = await dbClient.from('character_vessels').select('sheet_data').eq('id', loadedCloudVesselId).single();
@@ -2343,21 +2390,6 @@
 
             document.getElementById('advancementPoints').value = currentAP; payload['advancementPoints'] = currentAP;
             await dbClient.from('character_vessels').update({ sheet_data: payload }).eq('id', loadedCloudVesselId);
-            loadAndRenderAchievementsSystem();
-        }
-
-        async function purgeAdminAchievementNode(index, isGlobal) {
-            if (!isVesselAdminMode || isCloudLoadingInProgress) return;
-            if (!confirm("Scrub this milestone record permanently?")) return;
-            if (isGlobal) {
-                const { data: globalRow } = await dbClient.from('character_vessels').select('*').eq('character_name', '__GLOBAL_CAMPAIGN__').single();
-                let gPayload = globalRow.sheet_data; gPayload.dynamicAchievementsList.splice(index, 1);
-                await dbClient.from('character_vessels').update({ sheet_data: gPayload }).eq('id', globalRow.id);
-            } else {
-                const { data: vesselData } = await dbClient.from('character_vessels').select('sheet_data').eq('id', loadedCloudVesselId).single();
-                let payload = vesselData.sheet_data; payload.dynamicAchievementsList.splice(index, 1);
-                await dbClient.from('character_vessels').update({ sheet_data: payload }).eq('id', loadedCloudVesselId);
-            }
             loadAndRenderAchievementsSystem();
         }
 
