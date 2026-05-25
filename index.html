@@ -2042,6 +2042,21 @@
         //     REGISTRY OF DEEDS AP APPARATUS ENGINE LABS
         // =======================================================
         async function loadAndRenderAchievementsSystem() {
+            // Re-verify admin status every time the tab opens
+            // (handles timing gap between login and async IIFE completing)
+            if (currentUserSession) {
+                try {
+                    const { data: roleRow } = await dbClient
+                        .from('user_roles')
+                        .select('role')
+                        .eq('user_id', currentUserSession.user.id)
+                        .maybeSingle();
+                    isVesselAdminMode = roleRow?.role === 'admin';
+                    const adminBadge = document.getElementById('adminRoleBadge');
+                    if (adminBadge) adminBadge.style.display = isVesselAdminMode ? 'inline-block' : 'none';
+                } catch (e) { /* keep existing value */ }
+            }
+
             // ── Panel & button visibility ───────────────────────────────────────
             const adminPanel = document.getElementById('adminDeedsControlPanel');
             if (adminPanel) adminPanel.style.display = isVesselAdminMode ? 'flex' : 'none';
